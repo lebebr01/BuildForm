@@ -11,25 +11,46 @@ shinyServer(function(input, output) {
   params <- reactive({
     inFile <- input$file1
     
-    if (is.null(inFile))
-      return(NULL)
+    if(is.null(inFile)) { return(NULL) }
     
     read.csv(inFile$datapath, header=input$header, sep=input$sep, 
              quote=input$quote)
     })
   
-  output$ip <- renderDataTable(params())
+  output$items <- renderUI({
+    textInput('selectitems', 'Select Items')
+  })
+  
+  output$selitems <- renderText({
+    input$selectitems
+  })
+  
+  paramsA <- eventReactive(input$run, {
+    mytext <- input$selectitems
+     if(!is.null(mytext)) {
+       subparams <- params() %>%
+         slice(as.numeric(unlist(strsplit(mytext, ',\\s*'))))
+     } else {
+       subparams <- params()
+     }
+    return(subparams)
+  })
+  
+  
+  
+  output$ip <- renderDataTable(paramsA())
   
   output$icc1 <- renderPlot({
-        params2 <- params() %>%
+        params2 <- paramsA() %>%
           select(a, b, c) %>%
           filter(is.na(a) == FALSE)
         params2 <- data.frame(params2)
         names(params2) <- c('a', 'b', 'c')
         
         t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
+        t1_names <- paste0(names(t1)[2], ':', names(t1)[ncol(t1)])
         t1 <- t1 %>%
-          gather(item, prob, item_1.1:item_100.1)
+          gather(item, prob, eval(parse(text = t1_names)))
         
         # plot TCC for each item
         f <- ggplot(t1, aes(x = theta1, y = prob, color = factor(item) 
@@ -44,18 +65,19 @@ shinyServer(function(input, output) {
           #facet_grid(. ~ group)+
           theme(panel.grid.major = element_line(colour = "#a7a7a7"))
         print(f)
-  })
+  }, height = 800, width = 1200)
   
   output$tcc <- renderPlot({
-    params2 <- params() %>%
+    params2 <- paramsA() %>%
       select(a, b, c) %>%
       filter(is.na(a) == FALSE)
     params2 <- data.frame(params2)
     names(params2) <- c('a', 'b', 'c')
     
     t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
+    t1_names <- paste0(names(t1)[2], ':', names(t1)[ncol(t1)])
     t1 <- t1 %>%
-      gather(item, prob, item_1.1:item_100.1)
+      gather(item, prob, eval(parse(text = t1_names)))
     
     params2_agg <- summarise(params(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
     t1_agg <- data.frame(drm(params2_agg, seq(-5, 5, by = .01))@prob)
@@ -72,7 +94,7 @@ shinyServer(function(input, output) {
       #facet_grid(. ~ group)+
       theme(panel.grid.major = element_line(colour = "#a7a7a7"))
     print(f)
-  })
+  }, height = 800, width = 1200)
   
 #   icc <- reactive({
 #     params2 <- params() %>%
