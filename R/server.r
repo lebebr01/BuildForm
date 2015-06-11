@@ -5,20 +5,34 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(ggvis)
+library(knitr)
+library(readxl)
 
 shinyServer(function(input, output) {
 
   params <- reactive({
-    inFile <- input$file1
+    if(input$filetype == 1){
+          inFile <- input$file1
+          
+          if(is.null(inFile)) { return(NULL) }
+      read.csv(inFile$datapath, header=input$header, sep=input$sep, 
+               quote=input$quote)
+    } else {
+      inFile <- input$file2
+      
+      if(is.null(inFile)) { return(NULL) }
+      read_excel(inFile$datapath, sheet = input$sheet, 
+                 col_names = input$colnames)
+    }
     
-    if(is.null(inFile)) { return(NULL) }
-    
-    read.csv(inFile$datapath, header=input$header, sep=input$sep, 
-             quote=input$quote)
     })
   
   output$items <- renderUI({
     textInput('selectitems', 'Select Items')
+  })
+  
+  output$items_form2 <- renderUI({
+    textInput('selectitems_2', 'Select Items Form 2')
   })
   
   output$selitems <- renderText({
@@ -39,6 +53,11 @@ shinyServer(function(input, output) {
   
   
   output$ip <- renderDataTable(paramsA())
+  
+  output$avgparams <- renderDataTable({
+    paramsA() %>%
+      summarise(numitems = n(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
+  })
   
   output$icc1 <- renderPlot({
         params2 <- paramsA() %>%
@@ -93,6 +112,27 @@ shinyServer(function(input, output) {
       geom_line(data = t1_agg, aes(x = theta1, y = item_1.1), size = 3, color = "black") +
       #facet_grid(. ~ group)+
       theme(panel.grid.major = element_line(colour = "#a7a7a7"))
+    print(f)
+  }, height = 800, width = 1200)
+  
+  output$tif <- renderPlot({
+    paramsA_sort <- paramsA() %>%
+      select(a, b, c) %>%
+      arrange(b)
+    nitems <- nrow(paramsA_sort)
+    item.inf <- irtoys::iif(paramsA_sort, x = seq(-5, 5, by = .01))
+    # plots of individual items by grade - using cumsum across columns of f
+    cinf <- do.call("c", lapply(1:nrow(item.inf$f), function(xx) cumsum(item.inf$f[xx, ])))
+    item.cinf <- data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf$f)),
+                            information = cinf)
+    item.cinf$id <- rep(1:ncol(item.inf$f), times = 1001)
+    item.cinf$group <- ifelse(item.cinf$id == nitems, 1, 0)
+    
+    f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
+    f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
+      scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
+      scale_y_continuous("Information")+ 
+      geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), size = 1, linetype = 1, color = "black")
     print(f)
   }, height = 800, width = 1200)
   
