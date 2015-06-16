@@ -59,11 +59,17 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                   ))
            ))),
   tabPanel('Item Parameters',  
-           h4('Item by Item IRT Paramters'),
+           h4('Item by Item IRT Parameters'),
            dataTableOutput('ip'), 
            br(), 
+           conditionalPanel(
+             condition = "input.compare == true",
+             h4('Form 2 IRT Parameters'),
+             dataTableOutput('ip2')
+           ),
+           hr(),
            h4('Average IRT Parameters'),
-           dataTableOutput('avgparams', width = '75%')),
+           dataTableOutput('avgparams', width = '80%')),
   tabPanel('Item Characteristic Curves', plotOutput('icc1')),
   tabPanel('Test Characteristic Curve',  plotOutput('tcc')),
   tabPanel('Test Information Function', plotOutput('tif'))
