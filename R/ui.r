@@ -76,7 +76,12 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
            hr(),
            h4('Average IRT Parameters'),
            dataTableOutput('avgparams', width = '80%')),
-  tabPanel('Item Characteristic Curves', plotOutput('icc1')),
+  tabPanel('Item Characteristic Curves', fluidRow(
+    uiOutput('icc_plot')),
+    fluidRow(
+      wellPanel(
+      dataTableOutput('plot_clicked_points')
+    ))),
   tabPanel('Test Characteristic Curve',  plotOutput('tcc')),
   tabPanel('Test Information Function', plotOutput('tif'))
   ))
