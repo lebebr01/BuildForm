@@ -9,7 +9,9 @@ library(knitr)
 library(readxl)
 
 shinyServer(function(input, output) {
-
+  
+  select <- dplyr::select
+  
   params <- reactive({
     if(input$filetype == 1){
       inFile <- input$file1
@@ -80,6 +82,11 @@ shinyServer(function(input, output) {
       avgpar <- rbind(avgpar, avgpar2)
     }
     return(avgpar)
+  })
+  
+  output$Vars <- renderUI({
+    vars <- names(paramsA())
+    selectInput("groups", "Grouping Variables", choices = vars)
   })
 
   tccdat <- reactive({
