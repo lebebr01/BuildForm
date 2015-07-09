@@ -129,6 +129,7 @@ shinyServer(function(input, output) {
         f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
         )) + theme_bw(base_size = 16)
         f <- f + geom_line(size = 1, show_guide = FALSE) +
+          geom_point(size = 1) +
           #scale_linetype_discrete("Method") + 
           scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                              breaks = seq(0, 1, by = .1)) + 
@@ -156,7 +157,7 @@ shinyServer(function(input, output) {
   
   output$plot_clicked_points <- renderDataTable({
     dat <- tccdat()
-    res <- nearPoints(dat, input$plot_click)
+    res <- nearPoints(dat, input$plot_click, threshold = 15)
     datatable(res)
   })
   
