@@ -50,7 +50,9 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                   actionButton('run', 'Update'),
                   h5('Use the text box above to select items to include in the analysis, each item must be separated by a comma.'),
                   h5('Note: Click update button to run analysis (even if no items are selected in box above).'),
-                  h5('\n If no items identified in the text box, analysis is run on all items.')),
+                  h5('\n If no items identified in the text box, analysis is run on all items.'),
+                  hr(),
+                  checkboxInput('interactive', label = 'Interactive Plots?', value = FALSE)),
            column(4, 
                   checkboxInput('compare', label = 'Compare Forms?', value = FALSE),
                   hr(),
@@ -77,12 +79,7 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
            hr(),
            h4('Average IRT Parameters'),
            dataTableOutput('avgparams', width = '80%')),
-  tabPanel('Item Characteristic Curves', fluidRow(
-    uiOutput('icc_plot')),
-    fluidRow(
-      wellPanel(
-      dataTableOutput('plot_clicked_points')
-    ))),
+  tabPanel('Item Characteristic Curves', plotOutput('icc1')),
   tabPanel('Test Characteristic Curve',  plotOutput('tcc')),
   tabPanel('Test Information Function', plotOutput('tif'))
   ))

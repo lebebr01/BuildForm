@@ -119,10 +119,10 @@ shinyServer(function(input, output) {
     return(t1)
   })
   
-  output$icc_plot <- renderUI({
-    plotOutput('icc1', height = 600,
-               click = "plot_click")
-  })
+#   output$icc_plot <- renderUI({
+#     plotOutput('icc1', height = 600,
+#                click = "plot_click")
+#   })
   
   output$icc1 <- renderPlot({
         # plot TCC for each item
@@ -153,13 +153,13 @@ shinyServer(function(input, output) {
             facet_grid(. ~ form)
         }
         print(f)
-  })
+  }, height = 800, width = 1200)
   
-  output$plot_clicked_points <- renderDataTable({
-    dat <- tccdat()
-    res <- nearPoints(dat, input$plot_click, threshold = 15)
-    datatable(res)
-  })
+#   output$plot_clicked_points <- renderDataTable({
+#     dat <- tccdat()
+#     res <- nearPoints(dat, input$plot_click, threshold = 15)
+#     datatable(res)
+#   })
   
   output$tcc <- renderPlot({
 
