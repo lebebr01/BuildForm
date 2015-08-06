@@ -87,6 +87,18 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
              condition = 'input.interactive == true',
              showOutput('iccint', lib = 'nvd3'))
            ),
-  tabPanel('Test Characteristic Curve',  plotOutput('tcc')),
-  tabPanel('Test Information Function', plotOutput('tif'))
+  tabPanel('Test Characteristic Curve', 
+           conditionalPanel(
+             condition = 'input.interactive == false',
+             plotOutput('tcc')),
+           conditionalPanel(
+             condition = 'input.interactive == true',
+             showOutput('tccint', lib = 'nvd3'))),
+  tabPanel('Test Information Function', 
+           conditionalPanel(
+             condition = 'input.interactive == false',
+             plotOutput('tif')),
+           conditionalPanel(
+             condition = 'input.interactive == true',
+             showOutput('tifint', lib = 'nvd3')))
   ))

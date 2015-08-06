@@ -1,5 +1,6 @@
 library(shiny)
 library(DT)
+library(irtoys)
 library(plink)
 library(ggplot2)
 library(dplyr)
@@ -209,6 +210,16 @@ shinyServer(function(input, output) {
     print(f)
   }, height = 800, width = 1200)
   
+  output$tccint <- renderChart2({
+    #tccdat2 <- tccdat()
+    params2_agg <- summarise(paramsA(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
+    t1_agg <- data.frame(drm(params2_agg, seq(-5, 5, by = .1))@prob)
+    
+    f2 <- nPlot(y = 'item_1.1', x = 'theta1', data = t1_agg,
+               type = 'lineChart')
+    print(f2)
+  })
+  
   output$tif <- renderPlot({
     paramsA_sort <- paramsA() %>%
       select(a, b, c) %>%
@@ -254,6 +265,24 @@ shinyServer(function(input, output) {
     }
     print(f)
   }, height = 800, width = 1200)
+  
+  output$tifint <- renderChart2({
+    paramsA_sort <- paramsA() %>%
+      select(a, b, c) %>%
+      arrange(b)
+    nitems <- nrow(paramsA_sort)
+    item.inf <- irtoys::iif(paramsA_sort, x = seq(-5, 5, by = .1))
+    # plots of individual items by grade - using cumsum across columns of f
+    cinf <- do.call("c", lapply(1:nrow(item.inf$f), function(xx) cumsum(item.inf$f[xx, ])))
+    item.cinf <- data.frame(ability = rep(seq(-5, 5, by = .1), each = ncol(item.inf$f)),
+                            information = cinf)
+    item.cinf$id <- rep(1:ncol(item.inf$f), times = 101)
+    item.cinf$group <- ifelse(item.cinf$id == nitems, 1, 0)
+    
+    f3 <- nPlot(y = 'information', x = 'ability', group = "id", data = item.cinf,
+               type = 'lineChart')
+    print(f3)
+  })
   
 #   icc <- reactive({
 #     params2 <- params() %>%
