@@ -58,13 +58,21 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                   hr(),
                   conditionalPanel(
                     condition = "input.compare == true",
-                    uiOutput('Vars'),
                     h2('Build Form 2'),
                     hr(),
                     uiOutput('items_form2'),
                     actionButton('run2', 'Update Form 2'),
                     h5('Use the text box above to select items to include in analysis for Form 2, each item must be separated by a comma.'),
                     h5('Note: Click update button to run comparison analysis.')
+                  ),
+                  checkboxInput('groups', label = 'Compare by Groups?', 
+                                value = FALSE),
+                  hr(),
+                  conditionalPanel(
+                    condition = 'input.groups == true',
+                    h2('Select Grouping Variable'),
+                    hr(),
+                    uiOutput('Vars')
                   ))
            ))),
   tabPanel('Item Parameters',  

@@ -88,7 +88,7 @@ shinyServer(function(input, output) {
   
   output$Vars <- renderUI({
     vars <- names(paramsA())
-    selectInput("groups", "Grouping Variables", choices = vars)
+    selectInput("groupvar", "Grouping Variables", choices = vars)
   })
 
   tccdat <- reactive({
