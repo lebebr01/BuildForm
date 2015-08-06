@@ -99,6 +99,8 @@ shinyServer(function(input, output) {
     names(params2) <- c('a', 'b', 'c')
     
     t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
+    item_names <- paste("item", paramsA()$itemnumber, sep = "_")
+    colnames(t1) <- c("theta1", item_names)
     t1_names <- paste0(names(t1)[2], ':', names(t1)[ncol(t1)])
     t1 <- t1 %>%
       gather(item, prob, eval(parse(text = t1_names)))
@@ -111,6 +113,8 @@ shinyServer(function(input, output) {
     names(params3) <- c('a', 'b', 'c')
     
     t2 <- data.frame(drm(params3, seq(-5, 5, by = .1))@prob)
+    item_names <- paste("item", paramsA_2()$itemnumber, sep = "_")
+    colnames(t2) <- c("theta1", item_names)
     t2_names <- paste0(names(t2)[2], ':', names(t2)[ncol(t2)])
     t2 <- t2 %>%
       gather(item, prob, eval(parse(text = t2_names)))
@@ -214,8 +218,9 @@ shinyServer(function(input, output) {
     #tccdat2 <- tccdat()
     params2_agg <- summarise(paramsA(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
     t1_agg <- data.frame(drm(params2_agg, seq(-5, 5, by = .1))@prob)
+    colnames(t1_agg) <- c("theta1", "TCC")
     
-    f2 <- nPlot(y = 'item_1.1', x = 'theta1', data = t1_agg,
+    f2 <- nPlot(y = 'TCC', x = 'theta1', data = t1_agg,
                type = 'lineChart')
     print(f2)
   })
@@ -276,7 +281,9 @@ shinyServer(function(input, output) {
     cinf <- do.call("c", lapply(1:nrow(item.inf$f), function(xx) cumsum(item.inf$f[xx, ])))
     item.cinf <- data.frame(ability = rep(seq(-5, 5, by = .1), each = ncol(item.inf$f)),
                             information = cinf)
-    item.cinf$id <- rep(1:ncol(item.inf$f), times = 101)
+    item_names <- paste("item", arrange(paramsA(), b)$itemnumber,
+                        sep = "_")
+    item.cinf$id <- rep(item_names, times = 101)
     item.cinf$group <- ifelse(item.cinf$id == nitems, 1, 0)
     
     f3 <- nPlot(y = 'information', x = 'ability', group = "id", data = item.cinf,
