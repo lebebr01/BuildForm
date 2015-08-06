@@ -7,6 +7,8 @@ library(tidyr)
 #library(ggvis)
 library(knitr)
 library(readxl)
+library(rCharts)
+
 
 shinyServer(function(input, output) {
   
@@ -154,6 +156,12 @@ shinyServer(function(input, output) {
         }
         print(f)
   }, height = 800, width = 1200)
+  
+  output$iccint <- renderChart({
+    f <- nPlot(prob ~ theta1, group = "item", data = tccdat(),
+               type = "lineChart")
+    return(f)
+  })
   
 #   output$plot_clicked_points <- renderDataTable({
 #     dat <- tccdat()

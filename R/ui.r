@@ -2,6 +2,7 @@ library(shiny)
 library(DT)
 library(ggvis)
 library(shinythemes)
+library(rCharts)
 
 shinyUI(navbarPage(theme = shinytheme("journal"),
   title = 'Form Building',
@@ -79,7 +80,14 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
            hr(),
            h4('Average IRT Parameters'),
            dataTableOutput('avgparams', width = '80%')),
-  tabPanel('Item Characteristic Curves', plotOutput('icc1')),
+  tabPanel('Item Characteristic Curves', 
+           conditionalPanel(
+             condition = 'input.interactive == false',
+             plotOutput('icc1')),
+           conditionalPanel(
+             condition = 'input.interactive == true',
+             showOutput('iccint', 'polycharts'))
+           ),
   tabPanel('Test Characteristic Curve',  plotOutput('tcc')),
   tabPanel('Test Information Function', plotOutput('tif'))
   ))
