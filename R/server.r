@@ -124,12 +124,7 @@ shinyServer(function(input, output) {
   }
     return(t1)
   })
-  
-#   output$icc_plot <- renderUI({
-#     plotOutput('icc1', height = 600,
-#                click = "plot_click")
-#   })
-  
+
   output$icc1 <- renderPlot({
         # plot TCC for each item
         f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
@@ -167,12 +162,6 @@ shinyServer(function(input, output) {
                type = 'lineChart')
     print(f)
   })
-  
-#   output$plot_clicked_points <- renderDataTable({
-#     dat <- tccdat()
-#     res <- nearPoints(dat, input$plot_click, threshold = 15)
-#     datatable(res)
-#   })
   
   output$tcc <- renderPlot({
 
@@ -290,22 +279,5 @@ shinyServer(function(input, output) {
                type = 'lineChart')
     print(f3)
   })
-  
-#   icc <- reactive({
-#     params2 <- params() %>%
-#       select(a, b, c) %>%
-#       filter(is.na(a) == FALSE)
-#     params2 <- data.frame(params2)
-#     names(params2) <- c('a', 'b', 'c')
-#     
-#     t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
-#     t1 <- t1 %>%
-#       gather(item, prob, item_1.1:item_10.1)
-#     
-#     t1 %>% ggvis(x = theta1, y = prob, stroke = ~item) %>%
-#       layer_lines()
-#   })
-#   
-#   icc %>% bind_shiny('icc1')
   
 })
