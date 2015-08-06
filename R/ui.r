@@ -1,6 +1,5 @@
 library(shiny)
 library(DT)
-library(ggvis)
 library(shinythemes)
 library(rCharts)
 
@@ -86,7 +85,7 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
              plotOutput('icc1')),
            conditionalPanel(
              condition = 'input.interactive == true',
-             showOutput('iccint', 'polycharts'))
+             showOutput('iccint', lib = 'nvd3'))
            ),
   tabPanel('Test Characteristic Curve',  plotOutput('tcc')),
   tabPanel('Test Information Function', plotOutput('tif'))
