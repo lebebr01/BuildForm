@@ -160,6 +160,8 @@ shinyServer(function(input, output) {
     tccdat2 <- tccdat()
     f <- nPlot(y = 'prob', x = 'theta1', group = 'item', data = tccdat2,
                type = 'lineChart')
+    f$chart(forceY = c(0, 1))
+    f$yAxis(tickValues = seq(0, 1, by = 0.1))
     print(f)
   })
   
@@ -211,6 +213,8 @@ shinyServer(function(input, output) {
     
     f2 <- nPlot(y = 'TCC', x = 'theta1', data = t1_agg,
                type = 'lineChart')
+    f2$chart(forceY = c(0, 1))
+    f2$yAxis(tickValues = seq(0, 1, by = 0.1))
     print(f2)
   })
   
@@ -277,6 +281,9 @@ shinyServer(function(input, output) {
     
     f3 <- nPlot(y = 'information', x = 'ability', group = "id", data = item.cinf,
                type = 'lineChart')
+    f3$chart(forceY = c(0, max(item.cinf$information)))
+    f3$yAxis(tickValues = seq(0, max(item.cinf$information), 
+                                     length.out = 10))
     print(f3)
   })
   
