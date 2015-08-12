@@ -33,6 +33,11 @@ shinyServer(function(input, output) {
     
     })
   
+  output$variables <- renderUI({
+    vars_id <- names(params())
+    selectInput("idvar", "ID Variable", choices = vars_id)
+  })
+  
   output$items <- renderUI({
     textInput('selectitems', 'Select Items')
   })
@@ -51,9 +56,11 @@ shinyServer(function(input, output) {
   
   paramsA <- eventReactive(input$run, {
     mytext <- input$selectitems
+    id_var <- input$idvar
      if(!is.null(mytext)) {
+       num_sel <- as.numeric(unlist(strsplit(mytext, ',\\s*')))
        subparams <- params() %>%
-         slice(as.numeric(unlist(strsplit(mytext, ',\\s*'))))
+         filter_(paste(id_var, '%in% c(', mytext, ')'))
      } else {
        subparams <- params()
      }
@@ -62,9 +69,11 @@ shinyServer(function(input, output) {
   
   paramsA_2 <- eventReactive(input$run2, {
     mytext_2 <- input$selectitems_2
+    id_var <- input$idvar
     if(!is.null(mytext_2)) {
+      num_sel <- as.numeric(unlist(strsplit(mytext_2, ',\\s*')))
       subparams <- params() %>%
-        slice(as.numeric(unlist(strsplit(mytext_2, ',\\s*'))))
+        filter_(paste(id_var, '%in% c(', mytext_2, ')'))
     } else {
       subparams <- params()
     }
@@ -99,7 +108,7 @@ shinyServer(function(input, output) {
     names(params2) <- c('a', 'b', 'c')
     
     t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
-    item_names <- paste("item", paramsA()$itemnumber, sep = "_")
+    item_names <- paste("item", paramsA()[, input$idvar], sep = "_")
     colnames(t1) <- c("theta1", item_names)
     t1_names <- paste0(names(t1)[2], ':', names(t1)[ncol(t1)])
     t1 <- t1 %>%
@@ -113,7 +122,7 @@ shinyServer(function(input, output) {
     names(params3) <- c('a', 'b', 'c')
     
     t2 <- data.frame(drm(params3, seq(-5, 5, by = .1))@prob)
-    item_names <- paste("item", paramsA_2()$itemnumber, sep = "_")
+    item_names <- paste("item", paramsA()[, input$idvar], sep = "_")
     colnames(t2) <- c("theta1", item_names)
     t2_names <- paste0(names(t2)[2], ':', names(t2)[ncol(t2)])
     t2 <- t2 %>%
@@ -153,18 +162,17 @@ shinyServer(function(input, output) {
           facet_grid(. ~ form)
       } else {
         if(input$groups == TRUE & input$compare == FALSE) {
-          f <- output$Vars
-#           f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
-#           )) + theme_bw(base_size = 16)
-#           f <- f + geom_line(size = 1) +
-#             scale_color_discrete("Item") + 
-#             scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-#                                breaks = seq(0, 1, by = .1)) + 
-#             scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-#             theme(axis.title.y = element_text(vjust = 1.5), 
-#                   axis.title.x = element_text(vjust = -0.25)) + 
-#             theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
-#             facet_grid(. ~ output$Vars)
+          f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
+          )) + theme_bw(base_size = 16)
+          f <- f + geom_line(size = 1) +
+            scale_color_discrete("Item") + 
+            scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
+                               breaks = seq(0, 1, by = .1)) + 
+            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
+            theme(axis.title.y = element_text(vjust = 1.5), 
+                  axis.title.x = element_text(vjust = -0.25)) + 
+            theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
+            facet_grid(. ~ input$groupvar)
         }
       }
     }
