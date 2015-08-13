@@ -57,26 +57,24 @@ shinyServer(function(input, output) {
   paramsA <- eventReactive(input$run, {
     mytext <- input$selectitems
     id_var <- input$idvar
-     if(!is.null(mytext)) {
-       num_sel <- as.numeric(unlist(strsplit(mytext, ',\\s*')))
-       subparams <- params() %>%
-         filter_(paste(id_var, '%in% c(', mytext, ')'))
-     } else {
-       subparams <- params()
+     if(nchar(mytext) == 0) {
+       mytext <- paste(1:nrow(params()), collapse = ",")
      }
+    num_sel <- as.numeric(unlist(strsplit(mytext, ',\\s*')))
+    subparams <- params() %>%
+      filter_(paste(id_var, '%in% c(', mytext, ')'))
     return(subparams)
   })
   
   paramsA_2 <- eventReactive(input$run2, {
     mytext_2 <- input$selectitems_2
     id_var <- input$idvar
-    if(!is.null(mytext_2)) {
-      num_sel <- as.numeric(unlist(strsplit(mytext_2, ',\\s*')))
-      subparams <- params() %>%
-        filter_(paste(id_var, '%in% c(', mytext_2, ')'))
-    } else {
-      subparams <- params()
+    if(nchar(mytext_2) == 0) {
+      mytext_2 <- paste(1:nrow(params()), collapse = ",")
     }
+    num_sel <- as.numeric(unlist(strsplit(mytext_2, ',\\s*')))
+    subparams <- params() %>%
+      filter_(paste(id_var, '%in% c(', mytext_2, ')'))
     return(subparams)
   })
   
@@ -122,7 +120,7 @@ shinyServer(function(input, output) {
     names(params3) <- c('a', 'b', 'c')
     
     t2 <- data.frame(drm(params3, seq(-5, 5, by = .1))@prob)
-    item_names <- paste("item", paramsA()[, input$idvar], sep = "_")
+    item_names <- paste("item", paramsA_2()[, input$idvar], sep = "_")
     colnames(t2) <- c("theta1", item_names)
     t2_names <- paste0(names(t2)[2], ':', names(t2)[ncol(t2)])
     t2 <- t2 %>%
