@@ -9,6 +9,21 @@ library(knitr)
 library(readxl)
 library(rCharts)
 
+# t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
+# item_names <- paste("item", paramsA()[, input$idvar], sep = "_")
+# colnames(t1) <- c("theta1", item_names)
+# t1_names <- paste0(names(t1)[2], ':', names(t1)[ncol(t1)])
+# t1 <- t1 %>%
+#   gather(item, prob, eval(parse(text = t1_names)))
+
+# Function to do drm by groups
+drm_groups <- function(params, group, item_stats) {
+  tmp <- split(params, params[, group])
+  
+  tmp_drm <- lapply(1:length(tmp), function(xx) 
+    drm(tmp[[xx]][, item_stats], seq(-5, 5, by = .1))@prob)
+}
+
 options(RCHART_WIDTH = 1200, RCHART_HEIGHT = 800)
 shinyServer(function(input, output) {
   
