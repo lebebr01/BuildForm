@@ -114,18 +114,32 @@ shinyServer(function(input, output) {
   })
 
   tccdat <- reactive({
-    params2 <- paramsA() %>%
-      select(a, b, c) %>%
-      filter(is.na(a) == FALSE)
-    params2 <- data.frame(params2)
-    names(params2) <- c('a', 'b', 'c')
-    
-    t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
-    item_names <- paste("item", paramsA()[, input$idvar], sep = "_")
-    colnames(t1) <- c("theta1", item_names)
-    t1_names <- paste0(names(t1)[2], ':', names(t1)[ncol(t1)])
-    t1 <- t1 %>%
-      gather(item, prob, eval(parse(text = t1_names)))
+    if(input$groups == FALSE) {
+      params2 <- paramsA() %>%
+        select(a, b, c) %>%
+        filter(is.na(a) == FALSE)
+      params2 <- data.frame(params2)
+      names(params2) <- c('a', 'b', 'c')
+      
+      t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
+      item_names <- paste("item", paramsA()[, input$idvar], sep = "_")
+      colnames(t1) <- c("theta1", item_names)
+      t1_names <- paste0(names(t1)[2], ':', names(t1)[ncol(t1)])
+      t1 <- t1 %>%
+        gather(item, prob, eval(parse(text = t1_names)))
+    } else {
+      t1 <- drm_groups(paramsA(), input$groupvar, c('a', 'b', 'c'))
+      item_names <- unique(paste("item", paramsA()[, input$idvar], sep = "_"))
+      t1 <- do.call("rbind", lapply(seq(t1), function(xx) {
+        y <- data.frame(unique(paramsA()[, input$groupvar])[xx], t1[[xx]])
+        names(y) <- c(input$groupvar, "theta1", item_names)
+        return(y)
+      })
+      )
+      t1_names <- paste0(names(t1)[3], ':', names(t1)[ncol(t1)])
+      t1 <- t1 %>%
+        gather(item, prob, eval(parse(text = t1_names)))
+    }
     
   if(input$compare == TRUE) {
     params3 <- paramsA_2() %>%
@@ -185,7 +199,7 @@ shinyServer(function(input, output) {
             theme(axis.title.y = element_text(vjust = 1.5), 
                   axis.title.x = element_text(vjust = -0.25)) + 
             theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
-            facet_grid(. ~ input$groupvar)
+            facet_grid(reformulate(input$groupvar, "."))
         }
       }
     }
