@@ -98,11 +98,21 @@ shinyServer(function(input, output) {
   output$ip2 <- renderDataTable(paramsA_2())
   
   output$avgparams <- renderDataTable({
-    avgpar <- paramsA() %>%
-      summarise(Form = 'Form 1', Numitems = n(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
+    if(input$groups == FALSE) {
+      avgpar <- paramsA() %>%
+        summarise(Form = 'Form 1', Numitems = n(), mean_a = mean(a), 
+                  mean_b = mean(b), mean_c = mean(c))
+    } else {
+      avgpar <- paramsA() %>%
+        group_by_(input$groupvar) %>%
+        summarise(Numitems = n(), mean_a = mean(a), 
+                  mean_b = mean(b), mean_c = mean(c))
+    }
+    
     if(input$compare == TRUE) {
       avgpar2 <- paramsA_2() %>%
-        summarise(Form = 'Form 2', Numitems = n(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
+        summarise(Form = 'Form 2', Numitems = n(), mean_a = mean(a), 
+                  mean_b = mean(b), mean_c = mean(c))
       avgpar <- rbind(avgpar, avgpar2)
     }
     return(avgpar)
@@ -203,9 +213,7 @@ shinyServer(function(input, output) {
         }
       }
     }
-        
-        
-        print(f)
+     print(f)
   }, height = 800, width = 1200)
   
   output$iccint <- renderChart2({
