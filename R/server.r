@@ -406,26 +406,7 @@ shinyServer(function(input, output) {
                                          each = 1001*length(unique(paramsA()[, input$idvar])))
       item.cinf$group <- ifelse(item.cinf$id == length(unique(paramsA()[, input$idvar])), 1, 0)
     }
-    
-    if(input$groups == FALSE) {
-      f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
-      f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
-        scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
-        scale_y_continuous("Information")+ 
-        geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
-                  size = 1, linetype = 1, color = "black")
-    } else {
-      f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
-      f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
-        scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
-        scale_y_continuous("Information")+ 
-        geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
-                  size = 1, linetype = 1, color = "black") + 
-        facet_grid(reformulate(input$groupvar, "."))
-    }
-    
-    
-    if(input$compare == TRUE) {
+    if(input$compare == TRUE & input$groups == FALSE) {
       paramsA_sort_2 <- paramsA_2() %>%
         select(a, b, c) %>%
         arrange(b)
@@ -434,20 +415,66 @@ shinyServer(function(input, output) {
       # plots of individual items by grade - using cumsum across columns of f
       cinf_2 <- do.call("c", lapply(1:nrow(item.inf_2$f), function(xx) cumsum(item.inf_2$f[xx, ])))
       item.cinf_2 <- data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2$f)),
-                              information = cinf_2)
+                                information = cinf_2)
       item.cinf_2$id <- rep(1:ncol(item.inf_2$f), times = 1001)
       item.cinf_2$group <- ifelse(item.cinf_2$id == nitems, 1, 0)
       item.cinf_2$form <- 'Form 2'
       item.cinf$form <-'Form 1'
       item.cinf <- rbind(item.cinf, item.cinf_2)
-      
+    } else {
+      if(input$compare == TRUE & input$groups == TRUE) {
+        item.inf_2 <- iif_groups(paramsA_2(), input$groupvar, c('a', 'b', 'c'))
+        cinf_2 <- lapply(1:length(item.inf_2), function(xx) 
+          do.call("c", lapply(1:nrow(item.inf_2[[xx]]$f), function(ii) 
+            cumsum(item.inf_2[[xx]]$f[ii, ]))))
+        item.cinf_2 <- do.call("rbind", lapply(1:length(item.inf_2), function(xx)
+          data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2[[xx]]$f)),
+                     information = cinf_2[[xx]], id = rep(1:ncol(item.inf_2[[xx]]$f), times = 1001))))
+        item.cinf_2[, input$groupvar] <- rep(unique(paramsA_2()[, input$groupvar]), 
+                                           each = 1001*length(unique(paramsA_2()[, input$idvar])))
+        item.cinf_2$group <- ifelse(item.cinf_2$id == length(unique(paramsA_2()[, input$idvar])), 1, 0)
+        item.cinf_2$form <- 'Form 2'
+        item.cinf$form <-'Form 1'
+        item.cinf <- rbind(item.cinf, item.cinf_2)
+      }
+    }
+    
+    if(input$compare == FALSE & input$groups == FALSE) {
       f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
       f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
         scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
         scale_y_continuous("Information")+ 
-        geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), size = 1, linetype = 1, color = "black") + 
-        facet_grid(. ~ form)
-      
+        geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
+                  size = 1, linetype = 1, color = "black")
+    } else {
+      if(input$compare == FALSE & input$groups == TRUE) {
+        f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
+        f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
+          scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
+          scale_y_continuous("Information")+ 
+          geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
+                    size = 1, linetype = 1, color = "black") + 
+          facet_grid(reformulate(input$groupvar, "."))
+      } else {
+        if(input$compare == TRUE & input$groups == FALSE) {
+          f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
+          f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
+            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
+            scale_y_continuous("Information")+ 
+            geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), size = 1, linetype = 1, color = "black") + 
+            facet_grid(. ~ form)
+        } else {
+          if(input$compare == TRUE & input$groups == TRUE) {
+            f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
+            f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
+              scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
+              scale_y_continuous("Information")+ 
+              geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
+                        size = 1, linetype = 1, color = "black") + 
+              facet_grid(reformulate(input$groupvar, "form"))
+          }
+        }
+      }
     }
     print(f)
   }, height = 800, width = 1200)
