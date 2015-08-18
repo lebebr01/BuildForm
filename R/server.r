@@ -110,11 +110,23 @@ shinyServer(function(input, output) {
                   mean_b = mean(b), mean_c = mean(c))
     }
     
-    if(input$compare == TRUE) {
+    if(input$compare == TRUE & input$groups == FALSE) {
       avgpar2 <- paramsA_2() %>%
         summarise(Form = 'Form 2', Numitems = n(), mean_a = mean(a), 
                   mean_b = mean(b), mean_c = mean(c))
       avgpar <- rbind(avgpar, avgpar2)
+    } else {
+      if(input$compare == TRUE & input$groups == TRUE) {
+        avgpar2 <- paramsA_2() %>%
+          group_by_(input$groupvar) %>%
+          summarise(Numitems = n(), mean_a = mean(a), 
+                    mean_b = mean(b), mean_c = mean(c))
+        avgpar$Form <- 'Form 1'
+        avgpar2$Form <- 'Form 2'
+        avgpar <- rbind(avgpar, avgpar2)
+        avgpar <- avgpar[c('Form', input$groupvar, 'Numitems', 'mean_a', 
+                           'mean_b', 'mean_c')]
+      }
     }
     return(avgpar)
   })
@@ -152,7 +164,7 @@ shinyServer(function(input, output) {
         gather(item, prob, eval(parse(text = t1_names)))
     }
     
-  if(input$compare == TRUE) {
+  if(input$compare == TRUE & input$groups == FALSE) {
     params3 <- paramsA_2() %>%
       select(a, b, c) %>%
       filter(is.na(a) == FALSE)
@@ -168,6 +180,23 @@ shinyServer(function(input, output) {
     t2$form <- 'Form 2'
     t1$form <- 'Form 1'
     t1 <- rbind(t1, t2)
+  } else {
+    if(input$compare == TRUE & input$groups == TRUE) {
+      t2 <- drm_groups(paramsA_2(), input$groupvar, c('a', 'b', 'c'))
+      item_names <- unique(paste("item", paramsA_2()[, input$idvar], sep = "_"))
+      t2 <- do.call("rbind", lapply(seq(t2), function(xx) {
+        y <- data.frame(unique(paramsA_2()[, input$groupvar])[xx], t2[[xx]])
+        names(y) <- c(input$groupvar, "theta1", item_names)
+        return(y)
+      })
+      )
+      t2_names <- paste0(names(t2)[3], ':', names(t2)[ncol(t2)])
+      t2 <- t2 %>%
+        gather(item, prob, eval(parse(text = t2_names)))
+      t2$form <- 'Form 2'
+      t1$form <- 'Form 1'
+      t1 <- rbind(t1, t2)
+    }
   }
     return(t1)
   })
@@ -211,6 +240,18 @@ shinyServer(function(input, output) {
                   axis.title.x = element_text(vjust = -0.25)) + 
             theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
             facet_grid(reformulate(input$groupvar, "."))
+        } else {
+          f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
+          )) + theme_bw(base_size = 16)
+          f <- f + geom_line(size = 1) +
+            scale_color_discrete("Item") + 
+            scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
+                               breaks = seq(0, 1, by = .1)) + 
+            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
+            theme(axis.title.y = element_text(vjust = 1.5), 
+                  axis.title.x = element_text(vjust = -0.25)) + 
+            theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
+            facet_grid(reformulate(input$groupvar, "form"))
         }
       }
     }

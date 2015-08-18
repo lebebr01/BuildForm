@@ -67,7 +67,8 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                     uiOutput('items_form2'),
                     actionButton('run2', 'Update Form 2'),
                     h5('Use the text box above to select items to include in analysis for Form 2, each item must be separated by a comma.'),
-                    h5('Note: Click update button to run comparison analysis.')
+                    h5('Note: Click update button to run comparison analysis.'),
+                    hr()
                   ),
                   checkboxInput('groups', label = 'Compare by Groups?', 
                                 value = FALSE),
