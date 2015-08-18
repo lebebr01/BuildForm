@@ -284,13 +284,30 @@ shinyServer(function(input, output) {
                                       each = 101)
     }
     
-    params3_agg <- summarise(paramsA_2(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
-    t2_agg <- data.frame(drm(params3_agg, seq(-5, 5, by = .01))@prob)
-    t2_agg$form <- 'Form 2'
-    t1_agg$form <- 'Form 1'
-    t1_agg <- rbind(t1_agg, t2_agg)
+    if(input$compare == TRUE & input$groups == FALSE) {
+      params3_agg <- summarise(paramsA_2(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
+      t2_agg <- data.frame(drm(params3_agg, seq(-5, 5, by = .01))@prob)
+      t2_agg$form <- 'Form 2'
+      t1_agg$form <- 'Form 1'
+      t1_agg <- rbind(t1_agg, t2_agg)
+    } else {
+      if(input$compare == TRUE & input$groups == TRUE) {
+        params3_agg <- paramsA_2() %>%
+          group_by_(input$groupvar) %>%
+          summarise(mean_a = mean(a), 
+                    mean_b = mean(b), mean_c = mean(c)) %>%
+          data.frame()
+        t2_agg <- do.call("rbind", drm_groups(params3_agg, input$groupvar, 
+                                              c('mean_a', 'mean_b', 'mean_c')))
+        t2_agg[, input$groupvar] <- rep(unique(paramsA_2()[, input$groupvar]), 
+                                        each = 101)
+        t2_agg$form <- 'Form 2'
+        t1_agg$form <- 'Form 1'
+        t1_agg <- rbind(t1_agg, t2_agg)
+      }
+    }
     
-    if(input$groups == FALSE) {
+    if(input$compare == FALSE & input$groups == FALSE) {
       f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
         theme_bw(base_size = 16)
       f<- f + geom_line(size = 1, alpha = .5, show_guide = FALSE) +
@@ -303,35 +320,51 @@ shinyServer(function(input, output) {
         geom_line(data = t1_agg, aes(x = theta1, y = item_1.1), size = 3, color = "black") +
         theme(panel.grid.major = element_line(colour = "#a7a7a7"))
     } else {
-      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
-        theme_bw(base_size = 16)
-      f <- f + geom_line(size = 1) +
-        scale_color_discrete("Item") + 
-        scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                           breaks = seq(0, 1, by = .1)) + 
-        scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-        theme(axis.title.y = element_text(vjust = 1.5), 
-              axis.title.x = element_text(vjust = -0.25)) +
-        geom_line(data = t1_agg, aes(x = theta1, y = item_1.1), size = 3, color = "black") +
-        theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
-        facet_grid(reformulate(input$groupvar, "."))
+      if(input$compare == FALSE & input$groups == TRUE) {
+        f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+          theme_bw(base_size = 16)
+        f <- f + geom_line(size = 1) +
+          scale_color_discrete("Item") + 
+          scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
+                             breaks = seq(0, 1, by = .1)) + 
+          scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
+          theme(axis.title.y = element_text(vjust = 1.5), 
+                axis.title.x = element_text(vjust = -0.25)) +
+          geom_line(data = t1_agg, aes(x = theta1, y = item_1.1), size = 3, color = "black") +
+          theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
+          facet_grid(reformulate(input$groupvar, "."))
+      } else {
+        if(input$compare == TRUE & input$groups == FALSE) {
+          f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+            theme_bw(base_size = 16)
+          f <- f + geom_line(size = 1, show_guide = FALSE) +
+            #scale_linetype_discrete("Method") + 
+            scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
+                               breaks = seq(0, 1, by = .1)) + 
+            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
+            theme(axis.title.y = element_text(vjust = 1.5), 
+                  axis.title.x = element_text(vjust = -0.25)) + 
+            geom_line(data = t1_agg, aes(x = theta1, y = item_1.1), size = 3, color = "black")+ 
+            theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
+            facet_grid(. ~ form)
+        } else {
+          f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+            theme_bw(base_size = 16)
+          f <- f + geom_line(size = 1, show_guide = FALSE) +
+            #scale_linetype_discrete("Method") + 
+            scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
+                               breaks = seq(0, 1, by = .1)) + 
+            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
+            theme(axis.title.y = element_text(vjust = 1.5), 
+                  axis.title.x = element_text(vjust = -0.25)) + 
+            geom_line(data = t1_agg, aes(x = theta1, y = item_1.1), size = 3, color = "black")+ 
+            theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
+            facet_grid(reformulate(input$groupvar, "form"))
+        }
+      } 
     }
     
     
-    if(input$compare == TRUE) {
-      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
-        theme_bw(base_size = 16)
-      f <- f + geom_line(size = 1, show_guide = FALSE) +
-        #scale_linetype_discrete("Method") + 
-        scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                           breaks = seq(0, 1, by = .1)) + 
-        scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-        theme(axis.title.y = element_text(vjust = 1.5), 
-              axis.title.x = element_text(vjust = -0.25)) + 
-        geom_line(data = t1_agg, aes(x = theta1, y = item_1.1), size = 3, color = "black")+ 
-        theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
-        facet_grid(. ~ form)
-    }
     print(f)
   }, height = 800, width = 1200)
   
