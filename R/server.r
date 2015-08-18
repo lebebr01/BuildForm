@@ -216,8 +216,8 @@ shinyServer(function(input, output) {
         theme(panel.grid.major = element_line(colour = "#a7a7a7"))
     } else {
       if(input$compare == TRUE & input$groups == FALSE) {
-        f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
-        )) + theme_bw(base_size = 16)
+        f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+          theme_bw(base_size = 16)
         f <- f + geom_line(size = 1) +
           scale_color_discrete("Item") + 
           scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
@@ -229,8 +229,8 @@ shinyServer(function(input, output) {
           facet_grid(. ~ form)
       } else {
         if(input$groups == TRUE & input$compare == FALSE) {
-          f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
-          )) + theme_bw(base_size = 16)
+          f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+            theme_bw(base_size = 16)
           f <- f + geom_line(size = 1) +
             scale_color_discrete("Item") + 
             scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
@@ -241,8 +241,8 @@ shinyServer(function(input, output) {
             theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
             facet_grid(reformulate(input$groupvar, "."))
         } else {
-          f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
-          )) + theme_bw(base_size = 16)
+          f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+            theme_bw(base_size = 16)
           f <- f + geom_line(size = 1) +
             scale_color_discrete("Item") + 
             scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
@@ -284,9 +284,15 @@ shinyServer(function(input, output) {
                                       each = 101)
     }
     
+    params3_agg <- summarise(paramsA_2(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
+    t2_agg <- data.frame(drm(params3_agg, seq(-5, 5, by = .01))@prob)
+    t2_agg$form <- 'Form 2'
+    t1_agg$form <- 'Form 1'
+    t1_agg <- rbind(t1_agg, t2_agg)
+    
     if(input$groups == FALSE) {
-      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item)
-      )) + theme_bw(base_size = 16)
+      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+        theme_bw(base_size = 16)
       f<- f + geom_line(size = 1, alpha = .5, show_guide = FALSE) +
         #scale_linetype_discrete("Method") + 
         scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
@@ -297,8 +303,8 @@ shinyServer(function(input, output) {
         geom_line(data = t1_agg, aes(x = theta1, y = item_1.1), size = 3, color = "black") +
         theme(panel.grid.major = element_line(colour = "#a7a7a7"))
     } else {
-      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
-      )) + theme_bw(base_size = 16)
+      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+        theme_bw(base_size = 16)
       f <- f + geom_line(size = 1) +
         scale_color_discrete("Item") + 
         scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
@@ -313,14 +319,8 @@ shinyServer(function(input, output) {
     
     
     if(input$compare == TRUE) {
-      params3_agg <- summarise(paramsA_2(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
-      t2_agg <- data.frame(drm(params3_agg, seq(-5, 5, by = .01))@prob)
-      t2_agg$form <- 'Form 2'
-      t1_agg$form <- 'Form 1'
-      t1_agg <- rbind(t1_agg, t2_agg)
-      
-      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
-      )) + theme_bw(base_size = 16)
+      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+        theme_bw(base_size = 16)
       f <- f + geom_line(size = 1, show_guide = FALSE) +
         #scale_linetype_discrete("Method") + 
         scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
