@@ -272,17 +272,10 @@ shinyServer(function(input, output) {
     print(f)
   }, height = 800, width = 1200)
   
-#   vals <- reactiveValues(
-#     keeprows = rep(TRUE, 500)
-#   )
-  
-#   observeEvent(input$plot_click, {
-# 
-#   })
-  
   output$click_info <- renderDataTable({
     dat <- tccdat()
-    res <- nearPoints(dat, input$plot_click, xvar = 'theta1', yvar = 'prob')
+    res <- nearPoints(dat, input$plot1_click, xvar = 'theta1', yvar = 'prob',
+                      threshold = 25)
 #     keeprows <- rep(TRUE, nrow(dat))
 #     
 #     keeprows <- xor(keeprows, res$selected_)

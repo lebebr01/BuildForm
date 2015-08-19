@@ -98,7 +98,7 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
              plotOutput('icc1')),
            conditionalPanel(
              condition = 'input.interactive == true',
-             plotOutput('iccint', click = 'plot_click'),
+             plotOutput('iccint', click = 'plot1_click'),
              br(),
              hr(),
              dataTableOutput('click_info', width = '80%'))
