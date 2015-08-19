@@ -204,8 +204,8 @@ shinyServer(function(input, output) {
   output$icc1 <- renderPlot({
         # plot TCC for each item
     if(input$compare == FALSE & input$groups == FALSE) {
-      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item) 
-      )) + theme_bw(base_size = 16)
+      f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+        theme_bw(base_size = 16)
       f <- f + geom_line(size = 1) + 
         scale_color_discrete("Item") + 
         scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
@@ -258,14 +258,44 @@ shinyServer(function(input, output) {
      print(f)
   }, height = 800, width = 1200)
   
-  output$iccint <- renderChart2({
-    tccdat2 <- tccdat()
-    f <- nPlot(y = 'prob', x = 'theta1', group = 'item', data = tccdat2,
-               type = 'lineChart')
-    f$chart(forceY = c(0, 1))
-    f$yAxis(tickValues = seq(0, 1, by = 0.1))
-    print(f)
+  output$iccint <- renderPlot({
+    f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+      theme_bw(base_size = 16)
+    f <- f + geom_line(size = 0.3) + geom_point(size = 5) +
+      scale_color_discrete("Item") + 
+      scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
+                         breaks = seq(0, 1, by = .1)) + 
+      scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
+      theme(axis.title.y = element_text(vjust = 1.5), 
+            axis.title.x = element_text(vjust = -0.25)) + 
+      theme(panel.grid.major = element_line(colour = "#a7a7a7"))
   })
+  
+  vals <- reactiveValues(
+    keeprows <- rep(TRUE, nrow(tccdat()))
+  )
+  
+  observeEvent(input$plot_click, {
+    dat <- tccdat()
+    res <- nearPoints(dat, input$plot_click, allRows = TRUE)
+    vals$keeprows <- xor(vals$keeprows, res$selected_)
+  })
+  
+  output$click_info <- renderDataTable({
+    keep <- tccdat()[vals$keeprows, , drop = FALSE]
+    item_number <- gsub('item_', '', keep$item)
+    
+    filter_(paramsA(), input$idvar %in% item_number)
+  })
+  
+#   output$iccint <- renderChart2({
+#     tccdat2 <- tccdat()
+#     f <- nPlot(y = 'prob', x = 'theta1', group = 'item', data = tccdat2,
+#                type = 'lineChart')
+#     f$chart(forceY = c(0, 1))
+#     f$yAxis(tickValues = seq(0, 1, by = 0.1))
+#     print(f)
+#   })
   
   output$tcc <- renderPlot({
     if(input$groups == FALSE) {
