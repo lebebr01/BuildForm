@@ -269,23 +269,29 @@ shinyServer(function(input, output) {
       theme(axis.title.y = element_text(vjust = 1.5), 
             axis.title.x = element_text(vjust = -0.25)) + 
       theme(panel.grid.major = element_line(colour = "#a7a7a7"))
-  })
+    print(f)
+  }, height = 800, width = 1200)
   
-  vals <- reactiveValues(
-    keeprows <- rep(TRUE, nrow(tccdat()))
-  )
+#   vals <- reactiveValues(
+#     keeprows = rep(TRUE, 500)
+#   )
   
-  observeEvent(input$plot_click, {
-    dat <- tccdat()
-    res <- nearPoints(dat, input$plot_click, allRows = TRUE)
-    vals$keeprows <- xor(vals$keeprows, res$selected_)
-  })
+#   observeEvent(input$plot_click, {
+# 
+#   })
   
   output$click_info <- renderDataTable({
-    keep <- tccdat()[vals$keeprows, , drop = FALSE]
-    item_number <- gsub('item_', '', keep$item)
-    
-    filter_(paramsA(), input$idvar %in% item_number)
+    dat <- tccdat()
+    res <- nearPoints(dat, input$plot_click, xvar = 'theta1', yvar = 'prob')
+#     keeprows <- rep(TRUE, nrow(dat))
+#     
+#     keeprows <- xor(keeprows, res$selected_)
+#     
+#     keep <- tccdat()[keeprows, , drop = FALSE]
+#     item_number <- gsub('item_', '', keep$item)
+#     
+#     tmp <- filter_(paramsA(), input$idvar %in% item_number)
+    return(res)
   })
   
 #   output$iccint <- renderChart2({
