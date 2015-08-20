@@ -98,12 +98,19 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
              plotOutput('icc1')),
            conditionalPanel(
              condition = 'input.interactive == true',
-             plotOutput('iccint', click = 'plot1_click'),
-             br(),
-             hr(),
-             dataTableOutput('click_info', width = '80%'))
-             #showOutput('iccint', lib = 'nvd3'))
-           ),
+             fluidRow(
+               column(width = 8,
+                      plotOutput('iccint', click = 'plot1_click')
+               ),
+               column(width = 3,
+                      verbatimTextOutput("plot_clickinfo")
+               )),
+             fluidRow(
+               column(width = 12,
+                      dataTableOutput('click_info', width = '80%')
+               )))
+           #showOutput('iccint', lib = 'nvd3'))
+  ),
   tabPanel('Test Characteristic Curve', 
            conditionalPanel(
              condition = 'input.interactive == false',

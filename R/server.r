@@ -128,7 +128,7 @@ shinyServer(function(input, output) {
                            'mean_b', 'mean_c')]
       }
     }
-    return(avgpar)
+    datatable(avgpar)
   })
   
   output$Vars <- renderUI({
@@ -259,23 +259,28 @@ shinyServer(function(input, output) {
   }, height = 800, width = 1200)
   
   output$iccint <- renderPlot({
-    f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
+    f <- ggplot(tccdat(), aes(x = I(theta1+10), y = prob, color = factor(item))) + 
       theme_bw(base_size = 16)
-    f <- f + geom_line(size = 0.3) + geom_point(size = 5) +
+    f <- f + geom_point() +
       scale_color_discrete("Item") + 
       scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                          breaks = seq(0, 1, by = .1)) + 
-      scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
+      #scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
       theme(axis.title.y = element_text(vjust = 1.5), 
             axis.title.x = element_text(vjust = -0.25)) + 
       theme(panel.grid.major = element_line(colour = "#a7a7a7"))
     print(f)
-  }, height = 800, width = 1200)
+  }, height = 400, width = 800)
+  
+  output$plot_clickinfo <- renderPrint({
+    cat("input$plot1_click:\n")
+    str(input$plot1_click)
+  })
   
   output$click_info <- renderDataTable({
     dat <- tccdat()
-    res <- nearPoints(dat, input$plot1_click, xvar = 'theta1', yvar = 'prob',
-                      threshold = 25)
+    res <- nearPoints(tccdat(), input$plot1_click, xvar = 'theta1', yvar = 'prob',
+                      threshold = 150, addDist = TRUE)
 #     keeprows <- rep(TRUE, nrow(dat))
 #     
 #     keeprows <- xor(keeprows, res$selected_)
@@ -284,7 +289,7 @@ shinyServer(function(input, output) {
 #     item_number <- gsub('item_', '', keep$item)
 #     
 #     tmp <- filter_(paramsA(), input$idvar %in% item_number)
-    return(res)
+    datatable(res)
   })
   
 #   output$iccint <- renderChart2({
