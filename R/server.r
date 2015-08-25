@@ -255,11 +255,11 @@ shinyServer(function(input, output) {
         }
       }
     }
-     print(f)
+     f
   }, height = 800, width = 1200)
   
   output$iccint <- renderPlot({
-    f <- ggplot(tccdat(), aes(x = I(theta1+10), y = prob, color = factor(item))) + 
+    f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
       theme_bw(base_size = 16)
     f <- f + geom_point() +
       scale_color_discrete("Item") + 
@@ -269,27 +269,23 @@ shinyServer(function(input, output) {
       theme(axis.title.y = element_text(vjust = 1.5), 
             axis.title.x = element_text(vjust = -0.25)) + 
       theme(panel.grid.major = element_line(colour = "#a7a7a7"))
-    print(f)
+    f
   }, height = 400, width = 800)
   
-  output$plot_clickinfo <- renderPrint({
-    cat("input$plot1_click:\n")
-    str(input$plot1_click)
-  })
+#   output$plot_clickinfo <- renderPrint({
+#     cat("input$plot1_click:\n")
+#     str(input$plot1_click)
+#   })
   
   output$click_info <- renderDataTable({
     dat <- tccdat()
-    res <- nearPoints(tccdat(), input$plot1_click, xvar = 'theta1', yvar = 'prob',
-                      threshold = 150, addDist = TRUE)
-#     keeprows <- rep(TRUE, nrow(dat))
-#     
-#     keeprows <- xor(keeprows, res$selected_)
-#     
-#     keep <- tccdat()[keeprows, , drop = FALSE]
-#     item_number <- gsub('item_', '', keep$item)
-#     
-#     tmp <- filter_(paramsA(), input$idvar %in% item_number)
-    datatable(res)
+    res <- nearPoints(tccdat(), input$plot1_click,
+                      addDist = TRUE)
+   item_number <- paste(gsub('item_', '', res$item), collapse = ",")
+    
+    tmp <- filter_(paramsA(), paste0(input$idvar,  '%in% c(', 
+                                     item_number, ')'))
+    datatable(tmp)
   })
   
 #   output$iccint <- renderChart2({

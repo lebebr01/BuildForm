@@ -99,11 +99,8 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
            conditionalPanel(
              condition = 'input.interactive == true',
              fluidRow(
-               column(width = 8,
+               column(width = 12,
                       plotOutput('iccint', click = 'plot1_click')
-               ),
-               column(width = 3,
-                      verbatimTextOutput("plot_clickinfo")
                )),
              fluidRow(
                column(width = 12,
