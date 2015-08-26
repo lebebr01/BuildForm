@@ -7,7 +7,7 @@ library(dplyr)
 library(tidyr)
 library(knitr)
 library(readxl)
-library(rCharts)
+library(grid)
 
 # Function to do drm by groups
 drm_groups <- function(params, group, item_stats) {
@@ -207,6 +207,7 @@ shinyServer(function(input, output) {
       f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
         theme_bw(base_size = 16)
       f <- f + geom_line(size = 1) + 
+        geom_point(size = 0) + 
         scale_color_discrete("Item") + 
         scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                            breaks = seq(0, 1, by = .1)) + 
@@ -219,6 +220,7 @@ shinyServer(function(input, output) {
         f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
           theme_bw(base_size = 16)
         f <- f + geom_line(size = 1) +
+          geom_point(size = 0) + 
           scale_color_discrete("Item") + 
           scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                              breaks = seq(0, 1, by = .1)) + 
@@ -226,12 +228,13 @@ shinyServer(function(input, output) {
           theme(axis.title.y = element_text(vjust = 1.5), 
                 axis.title.x = element_text(vjust = -0.25)) +
           theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
-          facet_grid(. ~ form)
+          facet_grid(form ~ .)
       } else {
         if(input$groups == TRUE & input$compare == FALSE) {
           f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
             theme_bw(base_size = 16)
           f <- f + geom_line(size = 1) +
+            geom_point(size = 0) + 
             scale_color_discrete("Item") + 
             scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                                breaks = seq(0, 1, by = .1)) + 
@@ -244,58 +247,39 @@ shinyServer(function(input, output) {
           f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
             theme_bw(base_size = 16)
           f <- f + geom_line(size = 1) +
+            geom_point(size = 0) + 
             scale_color_discrete("Item") + 
             scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                                breaks = seq(0, 1, by = .1)) + 
             scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-            theme(axis.title.y = element_text(vjust = 1.5), 
-                  axis.title.x = element_text(vjust = -0.25)) + 
             theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
-            facet_grid(reformulate(input$groupvar, "form"))
+            facet_grid(reformulate(input$groupvar, "form")) + 
+            theme(axis.title.y = element_text(vjust = 1.5), 
+                  axis.title.x = element_text(vjust = -0.25),
+                  panel.margin = unit(0.35, "cm"))
         }
       }
     }
      f
-  }, height = 800, width = 1200)
-  
-  output$iccint <- renderPlot({
-    f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
-      theme_bw(base_size = 16)
-    f <- f + geom_point() +
-      scale_color_discrete("Item") + 
-      scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                         breaks = seq(0, 1, by = .1)) + 
-      #scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-      theme(axis.title.y = element_text(vjust = 1.5), 
-            axis.title.x = element_text(vjust = -0.25)) + 
-      theme(panel.grid.major = element_line(colour = "#a7a7a7"))
-    f
-  }, height = 400, width = 800)
-  
-#   output$plot_clickinfo <- renderPrint({
-#     cat("input$plot1_click:\n")
-#     str(input$plot1_click)
-#   })
+  })
   
   output$click_info <- renderDataTable({
     dat <- tccdat()
     res <- nearPoints(tccdat(), input$plot1_click,
                       addDist = TRUE)
-   item_number <- paste(gsub('item_', '', res$item), collapse = ",")
+    item_number <- paste(gsub('item_', '', res$item), collapse = ",")
     
-    tmp <- filter_(paramsA(), paste0(input$idvar,  '%in% c(', 
-                                     item_number, ')'))
+    if(input$compare == TRUE) {
+      dat2 <- rbind(paramsA(), paramsA_2())
+      tmp <- filter_(dat2, paste0(input$idvar, '%in% c(',
+                                  item_number, ')'))
+    } else {
+      tmp <- filter_(paramsA(), paste0(input$idvar,  '%in% c(', 
+                                       item_number, ')'))
+    }
+    
     datatable(tmp)
   })
-  
-#   output$iccint <- renderChart2({
-#     tccdat2 <- tccdat()
-#     f <- nPlot(y = 'prob', x = 'theta1', group = 'item', data = tccdat2,
-#                type = 'lineChart')
-#     f$chart(forceY = c(0, 1))
-#     f$yAxis(tickValues = seq(0, 1, by = 0.1))
-#     print(f)
-#   })
   
   output$tcc <- renderPlot({
     if(input$groups == FALSE) {
@@ -376,7 +360,7 @@ shinyServer(function(input, output) {
                   axis.title.x = element_text(vjust = -0.25)) + 
             geom_line(data = t1_agg, aes(x = theta1, y = item_1.1), size = 3, color = "black")+ 
             theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
-            facet_grid(. ~ form)
+            facet_grid(form ~ .)
         } else {
           f <- ggplot(tccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
             theme_bw(base_size = 16)
@@ -393,22 +377,7 @@ shinyServer(function(input, output) {
         }
       } 
     }
-    
-    
-    print(f)
-  }, height = 800, width = 1200)
-  
-  output$tccint <- renderChart2({
-    #tccdat2 <- tccdat()
-    params2_agg <- summarise(paramsA(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
-    t1_agg <- data.frame(drm(params2_agg, seq(-5, 5, by = .1))@prob)
-    colnames(t1_agg) <- c("theta1", "TCC")
-    
-    f2 <- nPlot(y = 'TCC', x = 'theta1', data = t1_agg,
-               type = 'lineChart')
-    f2$chart(forceY = c(0, 1))
-    f2$yAxis(tickValues = seq(0, 1, by = 0.1))
-    print(f2)
+    f
   })
   
   output$tif <- renderPlot({
@@ -492,7 +461,7 @@ shinyServer(function(input, output) {
             scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
             scale_y_continuous("Information")+ 
             geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), size = 1, linetype = 1, color = "black") + 
-            facet_grid(. ~ form)
+            facet_grid(form ~ .)
         } else {
           if(input$compare == TRUE & input$groups == TRUE) {
             f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
@@ -506,30 +475,7 @@ shinyServer(function(input, output) {
         }
       }
     }
-    print(f)
-  }, height = 800, width = 1200)
-  
-  output$tifint <- renderChart2({
-    paramsA_sort <- paramsA() %>%
-      select(a, b, c) %>%
-      arrange(b)
-    nitems <- nrow(paramsA_sort)
-    item.inf <- irtoys::iif(paramsA_sort, x = seq(-5, 5, by = .1))
-    # plots of individual items by grade - using cumsum across columns of f
-    cinf <- do.call("c", lapply(1:nrow(item.inf$f), function(xx) cumsum(item.inf$f[xx, ])))
-    item.cinf <- data.frame(ability = rep(seq(-5, 5, by = .1), each = ncol(item.inf$f)),
-                            information = cinf)
-    item_names <- paste("item", arrange(paramsA(), b)$itemnumber,
-                        sep = "_")
-    item.cinf$id <- rep(item_names, times = 101)
-    item.cinf$group <- ifelse(item.cinf$id == nitems, 1, 0)
-    
-    f3 <- nPlot(y = 'information', x = 'ability', group = "id", data = item.cinf,
-               type = 'lineChart')
-    f3$chart(forceY = c(0, max(item.cinf$information)))
-    f3$yAxis(tickValues = seq(0, max(item.cinf$information), 
-                                     length.out = 10))
-    print(f3)
+    f
   })
   
 })

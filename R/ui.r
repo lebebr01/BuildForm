@@ -54,9 +54,8 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                   actionButton('run', 'Update'),
                   h5('Use the text box above to select items to include in the analysis, each item must be separated by a comma.'),
                   h5('Note: Click update button to run analysis (even if no items are selected in box above).'),
-                  h5('\n If no items identified in the text box, analysis is run on all items.'),
-                  hr(),
-                  checkboxInput('interactive', label = 'Interactive Plots?', value = FALSE)),
+                  h5('\n If no items identified in the text box, analysis is run on all items.')
+                  ),
            column(4, 
                   checkboxInput('compare', label = 'Compare Forms?', value = FALSE),
                   hr(),
@@ -93,33 +92,20 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
            h4('Average IRT Parameters'),
            dataTableOutput('avgparams', width = '80%')),
   tabPanel('Item Characteristic Curves', 
-           conditionalPanel(
-             condition = 'input.interactive == false',
-             plotOutput('icc1')),
-           conditionalPanel(
-             condition = 'input.interactive == true',
-             fluidRow(
-               column(width = 12,
-                      plotOutput('iccint', click = 'plot1_click')
-               )),
-             fluidRow(
-               column(width = 12,
-                      dataTableOutput('click_info', width = '80%')
-               )))
-           #showOutput('iccint', lib = 'nvd3'))
+           plotOutput('icc1', click = 'plot1_click', height = 600),
+           wellPanel(
+             dataTableOutput('click_info', width = '80%')
+           )
   ),
   tabPanel('Test Characteristic Curve', 
-           conditionalPanel(
-             condition = 'input.interactive == false',
-             plotOutput('tcc')),
-           conditionalPanel(
-             condition = 'input.interactive == true',
-             showOutput('tccint', lib = 'nvd3'))),
+           plotOutput('tcc', click = 'click_tcc', height = 600),
+           wellPanel(
+             dataTableOutput('click_tcc', width = '80%')
+           )
+  ),
   tabPanel('Test Information Function', 
-           conditionalPanel(
-             condition = 'input.interactive == false',
-             plotOutput('tif')),
-           conditionalPanel(
-             condition = 'input.interactive == true',
-             showOutput('tifint', lib = 'nvd3')))
-  ))
+           plotOutput('tif', click = 'click_tif', height = 600),
+           wellPanel(
+             dataTableOutput('click_tif', width = '80%')
+           ))
+))
