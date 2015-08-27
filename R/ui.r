@@ -97,12 +97,20 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
              dataTableOutput('click_info', width = '80%')
            )
   ),
-  tabPanel('Test Characteristic Curve', 
-           plotOutput('tcc', click = 'click_tcc', height = 600),
-           wellPanel(
-             dataTableOutput('click_tcc', width = '80%')
-           )
+  navbarMenu("Test Characteristic Curve",
+    tabPanel('TCC - with ICC', 
+             plotOutput('tcc', click = 'click_tcc', height = 600),
+             wellPanel(
+               dataTableOutput('click_tcc_info', width = '80%')
+             )
+    ),
+    tabPanel('TCC One Plot',
+             plotOutput('tcc_comb', click = 'click_tcc_comb', height = 600),
+             wellPanel(
+               dataTableOutput('click_tcc_comb_info', width = '80%')
+             ))
   ),
+  
   tabPanel('Test Information Function', 
            plotOutput('tif', click = 'click_tif', height = 600),
            wellPanel(
