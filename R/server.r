@@ -280,7 +280,7 @@ shinyServer(function(input, output) {
     
     datatable(tmp)
   })
-  
+
   tccdat <- reactive({
     if(input$groups == FALSE) {
       params2_agg <- summarise(paramsA(), mean_a = mean(a), 
@@ -444,17 +444,44 @@ shinyServer(function(input, output) {
     dat <- tccdat()
     res <- nearPoints(tccdat(), input$click_tcc_comb,
                       addDist = TRUE)
-#     item_number <- paste(gsub('item_', '', res$item), collapse = ",")
-#     
-#     if(input$compare == TRUE) {
-#       dat2 <- rbind(paramsA(), paramsA_2())
-#       tmp <- filter_(dat2, paste0(input$idvar, '%in% c(',
-#                                   item_number, ')'))
+    
+#     if(input$groups == FALSE) {
+#       params2_agg <- summarise(paramsA(), mean_a = mean(a), 
+#                                mean_b = mean(b), mean_c = mean(c))
+#       params2_agg$form <- 'Form 1'
+#       avgpars <- params2_agg
 #     } else {
-#       tmp <- filter_(paramsA(), paste0(input$idvar,  '%in% c(', 
-#                                        item_number, ')'))
+#       params2_agg <- paramsA() %>%
+#         group_by_(input$groupvar) %>%
+#         summarise(mean_a = mean(a), 
+#                   mean_b = mean(b), mean_c = mean(c)) %>%
+#         data.frame()
+#       params2_agg$form <- 'Form 1'
+#       avgpars <- params2_agg
+#     }
+#     if(input$compare == TRUE & input$groups == FALSE) {
+#       params3_agg <- summarise(paramsA_2(), mean_a = mean(a), 
+#                                mean_b = mean(b), mean_c = mean(c))
+#       params3_agg$form <- 'Form 2'
+#       avgpars <- rbind(params2_agg, params3_agg)
+#     } else {
+#       params3_agg <- paramsA_2() %>%
+#         group_by_(input$groupvar) %>%
+#         summarise(mean_a = mean(a), 
+#                   mean_b = mean(b), mean_c = mean(c)) %>%
+#         data.frame()
+#       params3_agg$form <- 'Form 2'
+#       avgpars <- rbind(params2_agg, params3_agg)
 #     }
 #     
+#     if(input$compare) {
+#       avgpars <- filter(avgpars, form %in% unique(res$form))
+#     }
+#     if(input$groups) {
+#       avgpars <- filter_(avgpars, paste0(input$groupvar, '%in% c(',
+#                                          unique(res[, input$groupvar]), ')'))
+#     }
+    
     datatable(res)
   })
   
