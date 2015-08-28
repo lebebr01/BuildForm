@@ -1,0 +1,43 @@
+---
+title: "Interactively Build Test Forms"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Build Forms}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+```{r setup, include=FALSE}
+library(knitr)
+library(simReg)
+knit_print.data.frame = function(x, ...) {
+  res = paste(c('', '', kable(x, output = FALSE)), collapse = '\n')
+  asis_output(res)
+}
+```
+
+# Introduction
+A common task for a data analyst is updating an analysis when the data changes. These tasks have led to integrated analysis documents; commonly employed with R and Rmarkdown. The advantage of these documents comes from little to no change needed in the analysis code to recreate the reporting document. What if this was taken a step further to remove the data analysis from the re-running of the analysis? This can be achieved with the programming language R through an interactive platform called Shiny. The Shiny package offers an interactive web framework where end users do not need to know R to be able to run the analysis. An example is shown with the task of building assessment forms. Items that make up a given test form are commonly swapped due to content, alignment, or statistical concerns before a final form is developed. Using R and Shiny, this process could be done in an interactive environment, where items can be swapped on the fly and the analysis could be updated immediately. This can improve workflow, provide a reduction in errors, and reduce many repetitive tasks that commonly fall to data analysts. Extensions to other interactive or repetitive tasks will be explored.
+
+# Using the interactive platform
+The first step when using the shiny application is to load in a file that contains the item parameters estimated from an item response theory (IRT) model. The discrimination, difficulty, and pseudo-guessing parameters (or any combination) will be used to generate much of the output. The item parameter file can be a text file such as a comma separated value file or an excel file.
+
+Upon loading of the item parameter file, the user must select the variable that uniquely identifies each individual item. This is used to select the specific items that will be used in the analysis. Finally, items need to be selected in the text box to be included in the initial run of the analysis. The items must be separated by a comma. Upon entering the items into the text box, the 'Update' button is clicked and the analyses are run based on the items entered into the text box. 
+
+# Summary of analyses
+After submitting the first batch of items, summary statistics can be seen by clicking on the 'Item Parameters' tab. These interactive tables can be sorted or searched to access information needed by the user. The first table returns all the variables from the original item parameter file uploaded for the items inputted into the text box from the setup steps. The second table contains average item parameter statistics based on all of the items selected. For example, if 10 items were initially selected, this table would contain information on the average item parameters for those 10 items.
+
+![ScreenShot of Summary Statistics]()
+
+The next analysis depicts item characteristic curves (ICC) for all of the items selected on a single plot. By default the ability ranges from -5 to +5. The ICC plot shows the probability an individual with a given ability level would answer the item correctly. For example, if the ability of an individual is -1, the likelihood that individual would answer an item correctly would be the point where the ICC is at -1 ability level. The figure below depicts this comparison for a single item.
+
+![ICC Example]()
+
+The ICC figure is also interactive. The interactive feature allows the user to click on a specific ICC curve and the item parameter statistics will be shown in the table below. By default, any items within 5 pixels of the spot clicked on the figure are shown in the table. 
+
+The specific items are usually of interest to look at, however, it is also useful to look at the test as a whole. The test characteristic curve (TCC) can be useful to explore the effect the individual ICCs have on the test as a whole. The TCC can be shown in the tab 'Test Characteristic Curve'. This tab has two options, one 'TCC - with ICC' shows the TCC along with the individual ICCs that were explored in the previous plot. The second option, 'TCC One Plot', shows only the TCC. The second option allows for the use to interact with the plot to show the average item parameters that generated the TCC. 
+
+Finally, the test information function (TIF) can be seen in the 'Test Information Function' tab. The TIF shows the amount of information across the ability scale ranging from -5 to +5. For this plot, the items are arranged by their difficulty, as such, the first item at the bottom of the plot would reflect the easiest item on the test whereas the last item plotted (solid line) would reflect the most difficult item. 
+
+# Advanced Options
+The usefulness of this tool is likely in the advanced options that are available to the user. The user can compare different forms, for example by swapping one or more items, the user can see differences to the item statistics and plots side by side. In addition, the user can also look to explore group differences. For example, the user can look at differences between the forms with respect to gender, ethnicity, grade, etc. These variables need to be included in the uploaded item parameter file to condition the analysis by specific groups.
