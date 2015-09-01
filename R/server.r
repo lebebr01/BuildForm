@@ -94,6 +94,12 @@ shinyServer(function(input, output) {
     return(subparams)
   })
   
+  output$filtervars <- renderUI({
+    vars <- names(paramsA())
+    selectizeInput('filter_var', "Filter Variables", choices = vars,
+                   multiple = TRUE)
+  })
+  
   output$ip <- renderDataTable(paramsA())
   
   output$ip2 <- renderDataTable(paramsA_2())
@@ -133,9 +139,9 @@ shinyServer(function(input, output) {
   
   output$Vars <- renderUI({
     vars <- names(paramsA())
-    selectInput("groupvar", "Grouping Variables", choices = vars)
+    selectizeInput("groupvar", "Grouping Variables", choices = vars)
   })
-
+  
   iccdat <- reactive({
     if(input$groups == FALSE) {
       params2 <- paramsA() %>%
