@@ -5,7 +5,7 @@ library(rCharts)
 
 shinyUI(navbarPage(theme = shinytheme("journal"),
   title = 'Form Building',
-  tabPanel('Select File', 
+  tabPanel('Input File', 
            fluidPage(
            fluidRow(
              column(3,
@@ -76,6 +76,21 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                         actionButton('run2', 'Update Form 2'),
                         h5('Use the text box above to select items to include in analysis for Form 2, each item must be separated by a comma.'),
                         h5('Note: Click update button to run comparison analysis.'),
+                        hr(),
+                        hr()
+                      ),
+                      checkboxInput('download', label = 'Download Data?', value = FALSE),
+                      hr(),
+                      conditionalPanel(
+                        condition = 'input.download == true',
+                        h2('Select Data to Download'),
+                        hr(),
+                        selectizeInput('dataset', 'Choose Dataset',
+                                       choices = c('Form 1', 'Form 2'),
+                                       multiple = TRUE),
+                        downloadButton('downloadData', 'Download'),
+                        h5('Select dataset(s) to download to file. Will only include items
+                           that are shown in the "item parameters" tab for selected forms.'),
                         hr()
                       )
                ),
@@ -89,7 +104,8 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                         hr(),
                         uiOutput('Vars'),
                         h5('This will condition the analysis based on the group
-                           variable selected.')
+                           variable selected.'),
+                        hr()
                       )
                ),
                column(4, 
@@ -102,7 +118,8 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                         hr(),
                         uiOutput('filtervars'),
                         h5('The data will be filtered based on the variables
-                           and values entered')
+                           and values entered'),
+                        hr()
                       )
                )
              )
