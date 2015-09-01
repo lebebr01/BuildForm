@@ -47,38 +47,67 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                   h2('Select ID Variable'),
                   hr(),
                   uiOutput('variables'),
-                  hr(),
-                  h2('Build Form 1'),
+                  h5('Select the variable to identify items. This will be used
+                     to select items included in the analysis')
+                  ),
+           column(4, 
+                  h2('Select Items Form 1'),
                   hr(),
                   uiOutput('items'),
                   actionButton('run', 'Update'),
                   h5('Use the text box above to select items to include in the analysis, each item must be separated by a comma.'),
                   h5('Note: Click update button to run analysis (even if no items are selected in box above).'),
                   h5('\n If no items identified in the text box, analysis is run on all items.')
-                  ),
-           column(4, 
-                  checkboxInput('compare', label = 'Compare Forms?', value = FALSE),
-                  hr(),
-                  conditionalPanel(
-                    condition = "input.compare == true",
-                    h2('Build Form 2'),
-                    hr(),
-                    uiOutput('items_form2'),
-                    actionButton('run2', 'Update Form 2'),
-                    h5('Use the text box above to select items to include in analysis for Form 2, each item must be separated by a comma.'),
-                    h5('Note: Click update button to run comparison analysis.'),
-                    hr()
-                  ),
-                  checkboxInput('groups', label = 'Compare by Groups?', 
-                                value = FALSE),
-                  hr(),
-                  conditionalPanel(
-                    condition = 'input.groups == true',
-                    h2('Select Grouping Variable'),
-                    hr(),
-                    uiOutput('Vars')
-                  ))
-           ))),
+                  )
+           )
+           )
+  ),
+  tabPanel('Advanced Selection',
+           fluidPage(
+             fluidRow(
+               column(4, 
+                      checkboxInput('compare', label = 'Compare Forms?', value = FALSE),
+                      hr(),
+                      conditionalPanel(
+                        condition = "input.compare == true",
+                        h2('Build Form 2'),
+                        hr(),
+                        uiOutput('items_form2'),
+                        actionButton('run2', 'Update Form 2'),
+                        h5('Use the text box above to select items to include in analysis for Form 2, each item must be separated by a comma.'),
+                        h5('Note: Click update button to run comparison analysis.'),
+                        hr()
+                      )
+               ),
+               column(4, 
+                      checkboxInput('groups', label = 'Compare by Groups?', 
+                                    value = FALSE),
+                      hr(),
+                      conditionalPanel(
+                        condition = 'input.groups == true',
+                        h2('Select Grouping Variable'),
+                        hr(),
+                        uiOutput('Vars'),
+                        h5('This will condition the analysis based on the group
+                           variable selected.')
+                      )
+               ),
+               column(4, 
+                      checkboxInput('filter', label = 'Filter Data?',
+                                    value = FALSE),
+                      hr(),
+                      conditionalPanel(
+                        condition = 'input.filter == true',
+                        h2('Select Filter Variable(s)'),
+                        hr(),
+                        uiOutput('filtervars'),
+                        h5('The data will be filtered based on the variables
+                           and values entered')
+                      )
+               )
+             )
+           )
+  ),
   tabPanel('Item Parameters',  
            h4('Item by Item IRT Parameters'),
            dataTableOutput('ip'), 
