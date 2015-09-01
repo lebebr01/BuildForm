@@ -142,6 +142,27 @@ shinyServer(function(input, output) {
     selectizeInput("groupvar", "Grouping Variables", choices = vars)
   })
   
+  datasetInput <- reactive({
+    if(length(input$dataset) == 1){
+      switch(input$dataset,
+             "Form 1" = paramsA(),
+             "Form 2" = paramsA_2())
+    } else {
+      rbind(data.frame(paramsA(), form = "Form 1"),
+            data.frame(paramsA_2(), form = "Form 2"))
+    }
+    
+  })
+  
+  output$downloadData <- downloadHandler(
+    filename = function() { 
+      paste(input$dataset, '.csv', sep='') 
+    },
+    content = function(file) {
+      write.csv(datasetInput(), file, row.names = FALSE)
+    }
+  )
+  
   iccdat <- reactive({
     if(input$groups == FALSE) {
       params2 <- paramsA() %>%
