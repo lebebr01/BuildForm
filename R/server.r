@@ -26,7 +26,7 @@ iif_groups <- function(params, group, item_stats) {
 }
 
 options(RCHART_WIDTH = 1200, RCHART_HEIGHT = 800)
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   
   select <- dplyr::select
   
@@ -36,7 +36,7 @@ shinyServer(function(input, output) {
       
       if(is.null(inFile)) { return(NULL) }
       read.csv(inFile$datapath, header=input$header, sep=input$sep, 
-               quote=input$quote)
+               quote=input$quote, stringsAsFactors = FALSE)
     } else {
       inFile <- input$file2
       
@@ -70,6 +70,22 @@ shinyServer(function(input, output) {
     input$selectitems_2
   })
   
+  output$filtervars <- renderUI({
+    vars <- names(params())
+    selectizeInput('filter_var', "Filter Variables", choices = vars,
+                   multiple = TRUE)
+  })
+  
+  output$filter_2 <- renderUI({
+    if(length(input$filter_var) > 0) {
+      f_options <- lapply(1:length(input$filter_var), function(xx)
+        unique(params()[, input$filter_var[xx]]))
+      names(f_options) <- input$filter_var
+      selectizeInput('filter_2_options', 'Filter Values:',
+                     choices = f_options, multiple = TRUE)
+    }
+  })
+  
   paramsA <- eventReactive(input$run, {
     mytext <- input$selectitems
     id_var <- input$idvar
@@ -92,12 +108,6 @@ shinyServer(function(input, output) {
     subparams <- params() %>%
       filter_(paste(id_var, '%in% c(', mytext_2, ')'))
     return(subparams)
-  })
-  
-  output$filtervars <- renderUI({
-    vars <- names(paramsA())
-    selectizeInput('filter_var', "Filter Variables", choices = vars,
-                   multiple = TRUE)
   })
   
   output$ip <- renderDataTable(paramsA())

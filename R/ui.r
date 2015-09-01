@@ -117,6 +117,8 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                         h2('Select Filter Variable(s)'),
                         hr(),
                         uiOutput('filtervars'),
+                        hr(),
+                        uiOutput('filter_2'),
                         h5('The data will be filtered based on the variables
                            and values entered'),
                         hr()
