@@ -25,7 +25,8 @@ iif_groups <- function(params, group, item_stats) {
     iif(tmp[[xx]][, item_stats], x = seq(-5, 5, by = .01)))
 }
 
-options(RCHART_WIDTH = 1200, RCHART_HEIGHT = 800)
+options(RCHART_WIDTH = 1200, RCHART_HEIGHT = 800, 
+        useFancyQuotes = FALSE)
 shinyServer(function(input, output, session) {
   
   select <- dplyr::select
@@ -98,7 +99,7 @@ shinyServer(function(input, output, session) {
                           sQuote(input$filter_2_options))
       filt_vals <- paste(filt_vals, collapse = ",")
       filt <- paste(lapply(1:length(filt), function(xx) 
-        paste(filt[[xx]], '%in% c(', paste(filt_vals, collapse = ","), ')')),
+        paste0(filt[[xx]], ' %in% c(', filt_vals, ')')),
         collapse = "|")
       
       num_sel <- as.numeric(unlist(strsplit(mytext, ',\\s*')))
