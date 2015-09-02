@@ -89,13 +89,29 @@ shinyServer(function(input, output, session) {
   paramsA <- eventReactive(input$run, {
     mytext <- input$selectitems
     id_var <- input$idvar
-     if(nchar(mytext) == 0) {
-       mytext <- paste(1:nrow(params()), collapse = ",")
-     }
-    num_sel <- as.numeric(unlist(strsplit(mytext, ',\\s*')))
-    subparams <- params() %>%
-      filter_(paste(id_var, '%in% c(', mytext, ')'))
-    return(subparams)
+    if(nchar(mytext) == 0) {
+      mytext <- paste(1:nrow(params()), collapse = ",")
+    }
+    if(input$filter) {
+      filt <- as.list(input$filter_var)
+      filt_vals <- ifelse(input$filter_2_options == 'NA', 'NA', 
+                          sQuote(input$filter_2_options))
+      filt_vals <- paste(filt_vals, collapse = ",")
+      filt <- paste(lapply(1:length(filt), function(xx) 
+        paste(filt[[xx]], '%in% c(', paste(filt_vals, collapse = ","), ')')),
+        collapse = "|")
+      
+      num_sel <- as.numeric(unlist(strsplit(mytext, ',\\s*')))
+      subparams <- params() %>%
+        filter_(paste(id_var, '%in% c(', mytext, ')')) %>%
+        filter_(filt)
+      return(subparams)
+    } else {
+      num_sel <- as.numeric(unlist(strsplit(mytext, ',\\s*')))
+      subparams <- params() %>%
+        filter_(paste(id_var, '%in% c(', mytext, ')'))
+      return(subparams)
+    }
   })
   
   paramsA_2 <- eventReactive(input$run2, {
