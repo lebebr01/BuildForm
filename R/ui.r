@@ -119,8 +119,15 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                         uiOutput('filtervars'),
                         hr(),
                         uiOutput('filter_2'),
+                        radioButtons('filter_type', 'Type of Filtering',
+                                     choices = list(
+                                       'Or' = '|', 'And' = '&'
+                                     ), 
+                                     selected = '|'),
                         h5('The data will be filtered based on the variables
                            and values entered'),
+                        h5('Note: Or is an expanding operator, And is a 
+                           restricting operator when filtering data'),
                         hr()
                       )
                )

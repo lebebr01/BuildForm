@@ -100,7 +100,7 @@ shinyServer(function(input, output, session) {
       filt_vals <- paste(filt_vals, collapse = ",")
       filt <- paste(lapply(1:length(filt), function(xx) 
         paste0(filt[[xx]], ' %in% c(', filt_vals, ')')),
-        collapse = "|")
+        collapse = input$filter_type)
       
       num_sel <- as.numeric(unlist(strsplit(mytext, ',\\s*')))
       subparams <- params() %>%
