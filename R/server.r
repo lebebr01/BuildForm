@@ -56,21 +56,17 @@ shinyServer(function(input, output, session) {
   })
   
   output$items <- renderUI({
-    textInput('selectitems', 'Select Items')
+    selectizeInput('selectitems', 'Select Items Form 1', 
+                   choices = unique(params()[, input$idvar]),
+                   multiple = TRUE)
   })
   
   output$items_form2 <- renderUI({
-    textInput('selectitems_2', 'Select Items Form 2')
+    selectizeInput('selectitems_2', 'Select Items Form 2', 
+                   choices = unique(params()[, input$idvar]),
+                   multiple = TRUE)
   })
-  
-  output$selitems <- renderText({
-    input$selectitems
-  })
-  
-  output$selitems2 <- renderText({
-    input$selectitems_2
-  })
-  
+
   output$filtervars <- renderUI({
     vars <- names(params())
     selectizeInput('filter_var', "Filter Variables", choices = vars,
@@ -90,9 +86,9 @@ shinyServer(function(input, output, session) {
   paramsA <- eventReactive(input$run, {
     mytext <- input$selectitems
     id_var <- input$idvar
-    if(nchar(mytext) == 0) {
-      mytext <- paste(1:nrow(params()), collapse = ",")
-    }
+    mytext <- ifelse(length(mytext) == 0, 
+                     paste(1:nrow(params()), collapse = ","),
+                     paste(mytext, collapse = ","))
     if(input$filter) {
       filt <- as.list(input$filter_var)
       filt_vals <- ifelse(input$filter_2_options == 'NA', 'NA', 
@@ -118,13 +114,29 @@ shinyServer(function(input, output, session) {
   paramsA_2 <- eventReactive(input$run2, {
     mytext_2 <- input$selectitems_2
     id_var <- input$idvar
-    if(nchar(mytext_2) == 0) {
-      mytext_2 <- paste(1:nrow(params()), collapse = ",")
+    mytext_2 <- ifelse(length(mytext_2) == 0, 
+                       paste(1:nrow(params()), collapse = ","),
+                       paste(mytext_2, collapse = ","))
+    if(input$filter) {
+      filt <- as.list(input$filter_var)
+      filt_vals <- ifelse(input$filter_2_options == 'NA', 'NA', 
+                          sQuote(input$filter_2_options))
+      filt_vals <- paste(filt_vals, collapse = ",")
+      filt <- paste(lapply(1:length(filt), function(xx) 
+        paste0(filt[[xx]], ' %in% c(', filt_vals, ')')),
+        collapse = input$filter_type)
+      
+      num_sel <- as.numeric(unlist(strsplit(mytext_2, ',\\s*')))
+      subparams <- params() %>%
+        filter_(paste(id_var, '%in% c(', mytext_2, ')')) %>%
+        filter_(filt)
+      return(subparams)
+    } else {
+      num_sel <- as.numeric(unlist(strsplit(mytext_2, ',\\s*')))
+      subparams <- params() %>%
+        filter_(paste(id_var, '%in% c(', mytext_2, ')'))
+      return(subparams)
     }
-    num_sel <- as.numeric(unlist(strsplit(mytext_2, ',\\s*')))
-    subparams <- params() %>%
-      filter_(paste(id_var, '%in% c(', mytext_2, ')'))
-    return(subparams)
   })
   
   output$ip <- renderDataTable(paramsA())

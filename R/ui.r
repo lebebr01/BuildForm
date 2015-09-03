@@ -135,7 +135,7 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
            )
   ),
   tabPanel('Item Parameters',  
-           h4('Item by Item IRT Parameters'),
+           h4('Form 1 IRT Parameters'),
            dataTableOutput('ip'), 
            br(), 
            conditionalPanel(
