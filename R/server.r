@@ -45,10 +45,9 @@ shinyServer(function(input, output, session) {
       file.rename(inFile$datapath,
                   paste(inFile$datapath, ".xlsx", sep=""))
       data.frame(read_excel(paste0(inFile$datapath, '.xlsx'), 1,  
-                 col_names = input$colnames))
+                            col_names = input$colnames))
     }
-    
-    })
+  })
   
   output$variables <- renderUI({
     vars_id <- names(params())
