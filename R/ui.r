@@ -48,7 +48,16 @@ shinyUI(navbarPage(theme = shinytheme("journal"),
                   hr(),
                   uiOutput('variables'),
                   h5('Select the variable to identify items. This will be used
-                     to select items included in the analysis')
+                     to select items included in the analysis'),
+                  hr(),
+                  h2('Select IRT Item Parameter Variables'),
+                  hr(),
+                  uiOutput('param_v'),
+                  h5('Select the variables that correspond to the discrimination (a),
+                      difficulty (b), and pseudo-guessing (c) parameters. These must
+                      be specified in the order of a, then b, then c. Note: Only the 
+                      b parameter is needed for the equivalent 1PL model.'),
+                  hr()
                   ),
            column(4, 
                   h2('Select Items Form 1'),

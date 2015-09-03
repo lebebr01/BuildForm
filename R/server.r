@@ -54,6 +54,12 @@ shinyServer(function(input, output, session) {
     selectInput("idvar", "ID Variable", choices = vars_id)
   })
   
+  output$param_v <- renderUI({
+    vars_id <- names(params())
+    selectInput("param_vals", "IRT Parameter Values", choices = vars_id,
+                multiple = TRUE)
+  })
+  
   output$items <- renderUI({
     selectizeInput('selectitems', 'Select Items Form 1', 
                    choices = unique(params()[, input$idvar]),
@@ -204,10 +210,8 @@ shinyServer(function(input, output, session) {
   iccdat <- reactive({
     if(input$groups == FALSE) {
       params2 <- paramsA() %>%
-        select(a, b, c) %>%
-        filter(is.na(a) == FALSE)
+        select_(.dots = input$param_vals)
       params2 <- data.frame(params2)
-      names(params2) <- c('a', 'b', 'c')
       
       t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
       item_names <- paste("item", paramsA()[, input$idvar], sep = "_")
@@ -216,7 +220,7 @@ shinyServer(function(input, output, session) {
       t1 <- t1 %>%
         gather(item, prob, eval(parse(text = t1_names)))
     } else {
-      t1 <- drm_groups(paramsA(), input$groupvar, c('a', 'b', 'c'))
+      t1 <- drm_groups(paramsA(), input$groupvar, input$param_vals)
       item_names <- unique(paste("item", paramsA()[, input$idvar], sep = "_"))
       t1 <- do.call("rbind", lapply(seq(t1), function(xx) {
         y <- data.frame(unique(paramsA()[, input$groupvar])[xx], t1[[xx]])
@@ -231,10 +235,8 @@ shinyServer(function(input, output, session) {
     
   if(input$compare == TRUE & input$groups == FALSE) {
     params3 <- paramsA_2() %>%
-      select(a, b, c) %>%
-      filter(is.na(a) == FALSE)
+      select_(.dots = input$param_vals)
     params3 <- data.frame(params3)
-    names(params3) <- c('a', 'b', 'c')
     
     t2 <- data.frame(drm(params3, seq(-5, 5, by = .1))@prob)
     item_names <- paste("item", paramsA_2()[, input$idvar], sep = "_")
@@ -247,7 +249,7 @@ shinyServer(function(input, output, session) {
     t1 <- rbind(t1, t2)
   } else {
     if(input$compare == TRUE & input$groups == TRUE) {
-      t2 <- drm_groups(paramsA_2(), input$groupvar, c('a', 'b', 'c'))
+      t2 <- drm_groups(paramsA_2(), input$groupvar, input$param_vals)
       item_names <- unique(paste("item", paramsA_2()[, input$idvar], sep = "_"))
       t2 <- do.call("rbind", lapply(seq(t2), function(xx) {
         y <- data.frame(unique(paramsA_2()[, input$groupvar])[xx], t2[[xx]])
