@@ -156,7 +156,7 @@ shinyServer(function(input, output, session) {
     } else {
       avgpar <- paramsA() %>%
         group_by_(input$groupvar) %>%
-        summarise(Numitems = n(), mean_a = mean(a), 
+        summarise(Form = 'Form 1', Numitems = n(), mean_a = mean(a), 
                   mean_b = mean(b), mean_c = mean(c))
     }
     
@@ -210,7 +210,8 @@ shinyServer(function(input, output, session) {
   iccdat <- reactive({
     if(input$groups == FALSE) {
       params2 <- paramsA() %>%
-        select_(.dots = input$param_vals)
+        select_(.dots = input$param_vals) %>%
+        filter(complete.cases(.))
       params2 <- data.frame(params2)
       
       t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
@@ -221,10 +222,13 @@ shinyServer(function(input, output, session) {
         gather(item, prob, eval(parse(text = t1_names)))
     } else {
       t1 <- drm_groups(paramsA(), input$groupvar, input$param_vals)
-      item_names <- unique(paste("item", paramsA()[, input$idvar], sep = "_"))
+      uniq_groups <- unique(paramsA()[, input$groupvar])
+      item_names <- lapply(1:length(uniq_groups), function(xx)
+        unique(paste("item", paramsA()[input$groupvar == uniq_groups[xx], input$idvar], sep = "_")))
+      # item_names <- unique(paste("item", paramsA()[, input$idvar], sep = "_"))
       t1 <- do.call("rbind", lapply(seq(t1), function(xx) {
         y <- data.frame(unique(paramsA()[, input$groupvar])[xx], t1[[xx]])
-        names(y) <- c(input$groupvar, "theta1", item_names)
+        names(y) <- c(input$groupvar, "theta1", item_names[[xx]])
         return(y)
       })
       )
@@ -235,7 +239,8 @@ shinyServer(function(input, output, session) {
     
   if(input$compare == TRUE & input$groups == FALSE) {
     params3 <- paramsA_2() %>%
-      select_(.dots = input$param_vals)
+      select_(.dots = input$param_vals) %>%
+      filter(complete.cases(.))
     params3 <- data.frame(params3)
     
     t2 <- data.frame(drm(params3, seq(-5, 5, by = .1))@prob)
