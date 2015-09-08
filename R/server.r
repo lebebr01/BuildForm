@@ -217,12 +217,12 @@ shinyServer(function(input, output, session) {
   iccdat <- reactive({
     if(input$groups == FALSE) {
       params2 <- paramsA() %>%
-        select_(.dots = input$param_vals) %>%
+        select_(.dots = c(input$idvar, input$param_vals)) %>%
         filter(complete.cases(.))
       params2 <- data.frame(params2)
       
-      t1 <- data.frame(drm(params2, seq(-5, 5, by = .1))@prob)
-      item_names <- paste("item", paramsA()[, input$idvar], sep = "_")
+      t1 <- data.frame(drm(params2[, input$param_vals], seq(-5, 5, by = .1))@prob)
+      item_names <- paste("item", params2[, input$idvar], sep = "_")
       colnames(t1) <- c("theta1", item_names)
       t1_names <- paste0(names(t1)[2], ':', names(t1)[ncol(t1)])
       t1 <- t1 %>%
@@ -366,20 +366,26 @@ shinyServer(function(input, output, session) {
   })
 
   tccdat <- reactive({
+    funcs <- sapply(1:length(input$param_vals), function(xx) 
+      paste0('mean(', input$param_vals[xx], ')'))
     if(input$groups == FALSE) {
-      params2_agg <- summarise(paramsA(), mean_a = mean(a), 
-                               mean_b = mean(b), mean_c = mean(c))
+      params2_agg <- paramsA() %>%
+        select_(.dots = input$param_vals) %>%
+        filter(complete.cases(.)) %>%
+        summarise_(.dots = funcs) %>%
+        data.frame()
       t1_agg <- data.frame(drm(params2_agg, seq(-5, 5, by = .01))@prob)
     } else {
       params2_agg <- paramsA() %>%
+        select_(.dots = c(input$groupvar, input$param_vals)) %>%
+        filter(complete.cases(.)) %>%
         group_by_(input$groupvar) %>%
-        summarise(mean_a = mean(a), 
-                  mean_b = mean(b), mean_c = mean(c)) %>%
+        summarise_(.dots = c(funcs)) %>%
         data.frame()
       t1_agg <- do.call("rbind", drm_groups(params2_agg, input$groupvar, 
-                                            c('mean_a', 'mean_b', 'mean_c')))
-      t1_agg[, input$groupvar] <- rep(unique(paramsA()[, input$groupvar]), 
-                                      each = 101)
+                                            names(params2_agg)[2:ncol(params2_agg)]))
+      t1_agg[, input$groupvar] <- as.character(rep(unique(params2_agg[, input$groupvar]), 
+                                      each = 101))
     }
     
     if(input$compare == TRUE & input$groups == FALSE) {
@@ -471,7 +477,7 @@ shinyServer(function(input, output, session) {
     if(input$compare == FALSE & input$groups == FALSE) {
       f <- ggplot(tccdat(), aes(x = theta1, y = item_1.1)) + 
         theme_bw(base_size = 16)
-      f<- f + geom_line(size = 1, show_guide = FALSE) +
+      f <- f + geom_line(size = 1, show_guide = FALSE) +
         geom_point(size = 0) + 
         scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                            breaks = seq(0, 1, by = .1)) + 
@@ -485,7 +491,7 @@ shinyServer(function(input, output, session) {
           theme_bw(base_size = 16)
         f <- f + geom_line(size = 1, aes_string(color = input$groupvar)) +
           geom_point(size = 0, aes_string(color = input$groupvar)) +
-          scale_color_discrete("Item") + 
+          scale_color_discrete("Group") + 
           scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                              breaks = seq(0, 1, by = .1)) + 
           scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
