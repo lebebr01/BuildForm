@@ -152,15 +152,19 @@ shinyServer(function(input, output, session) {
   output$ip2 <- renderDataTable(paramsA_2())
   
   output$avgparams <- renderDataTable({
+    funcs <- sapply(1:length(input$param_vals), function(xx) 
+      paste0('mean(', input$param_vals[xx], ')'))
     if(input$groups == FALSE) {
       avgpar <- paramsA() %>%
-        summarise(Form = 'Form 1', Numitems = n(), mean_a = mean(a), 
-                  mean_b = mean(b), mean_c = mean(c))
+        select_(.dots = input$param_vals) %>%
+        filter(complete.cases(.)) %>%
+        summarise_(.dots = c(list("'Form 1'", "n()"), funcs))
     } else {
       avgpar <- paramsA() %>%
+        select_(.dots = c(input$groupvar, input$param_vals)) %>%
+        filter(complete.cases(.)) %>%
         group_by_(input$groupvar) %>%
-        summarise(Form = 'Form 1', Numitems = n(), mean_a = mean(a), 
-                  mean_b = mean(b), mean_c = mean(c))
+        summarise_(.dots = c(list("'Form 1'", "n()"), funcs))
     }
     
     if(input$compare == TRUE & input$groups == FALSE) {
