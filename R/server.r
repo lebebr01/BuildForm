@@ -7,6 +7,7 @@ library(dplyr)
 library(tidyr)
 library(knitr)
 library(readxl)
+library(readr)
 library(grid)
 
 # Function to do drm by groups
@@ -36,7 +37,7 @@ shinyServer(function(input, output, session) {
       inFile <- input$file1
       
       if(is.null(inFile)) { return(NULL) }
-      read.csv(inFile$datapath, header=input$header, sep=input$sep, 
+      tmp <- read_csv(inFile$datapath, header=input$header, sep=input$sep, 
                quote=input$quote, stringsAsFactors = FALSE)
     } else {
       inFile <- input$file2
@@ -44,9 +45,11 @@ shinyServer(function(input, output, session) {
       if(is.null(inFile)) { return(NULL) }
       file.rename(inFile$datapath,
                   paste(inFile$datapath, ".xlsx", sep=""))
-      data.frame(read_excel(paste0(inFile$datapath, '.xlsx'), 1,  
-                            col_names = input$colnames))
+      tmp <- read_excel(paste0(inFile$datapath, '.xlsx'), 1,  
+                            col_names = input$colnames)
     }
+    names(tmp) <- gsub("\\s+", "_", names(tmp))
+    return(tmp)
   })
   
   output$variables <- renderUI({
@@ -221,13 +224,18 @@ shinyServer(function(input, output, session) {
       t1 <- t1 %>%
         gather(item, prob, eval(parse(text = t1_names)))
     } else {
-      t1 <- drm_groups(paramsA(), input$groupvar, input$param_vals)
-      uniq_groups <- unique(paramsA()[, input$groupvar])
+      params2 <- paramsA() %>%
+        select_(.dots = c(input$idvar, input$groupvar, input$param_vals)) %>%
+        filter(complete.cases(.))
+      params2 <- data.frame(params2)
+      
+      t1 <- drm_groups(params2, input$groupvar, input$param_vals)
+      uniq_groups <- unique(params2[, input$groupvar])
       item_names <- lapply(1:length(uniq_groups), function(xx)
-        unique(paste("item", paramsA()[input$groupvar == uniq_groups[xx], input$idvar], sep = "_")))
+        unique(paste("item", filter_(params2, paste0(input$groupvar, '==', uniq_groups[xx]))[, input$idvar], sep = "_")))
       # item_names <- unique(paste("item", paramsA()[, input$idvar], sep = "_"))
       t1 <- do.call("rbind", lapply(seq(t1), function(xx) {
-        y <- data.frame(unique(paramsA()[, input$groupvar])[xx], t1[[xx]])
+        y <- data.frame(unique(params2[, input$groupvar])[xx], t1[[xx]])
         names(y) <- c(input$groupvar, "theta1", item_names[[xx]])
         return(y)
       })
