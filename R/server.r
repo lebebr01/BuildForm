@@ -234,19 +234,20 @@ shinyServer(function(input, output, session) {
       params2 <- data.frame(params2)
       
       t1 <- drm_groups(params2, input$groupvar, input$param_vals)
-      uniq_groups <- unique(params2[, input$groupvar])
+      uniq_groups <- sort(unique(params2[, input$groupvar]))
       item_names <- lapply(1:length(uniq_groups), function(xx)
         unique(paste("item", filter_(params2, paste0(input$groupvar, '==', uniq_groups[xx]))[, input$idvar], sep = "_")))
       # item_names <- unique(paste("item", paramsA()[, input$idvar], sep = "_"))
-      t1 <- do.call("rbind", lapply(seq(t1), function(xx) {
-        y <- data.frame(unique(params2[, input$groupvar])[xx], t1[[xx]])
+      t1 <- lapply(seq(t1), function(xx) {
+        y <- data.frame(uniq_groups[xx], t1[[xx]])
         names(y) <- c(input$groupvar, "theta1", item_names[[xx]])
+        t1_names <- paste0(item_names[[xx]][1], ':', 
+               item_names[[xx]][length(item_names[[xx]])])
+        y <- y %>%
+          gather(item, prob, eval(parse(text = t1_names)))
         return(y)
       })
-      )
-      t1_names <- paste0(names(t1)[3], ':', names(t1)[ncol(t1)])
-      t1 <- t1 %>%
-        gather(item, prob, eval(parse(text = t1_names)))
+      t1 <- do.call("rbind", t1)
     }
     
   if(input$compare == TRUE & input$groups == FALSE) {
@@ -384,8 +385,8 @@ shinyServer(function(input, output, session) {
         data.frame()
       t1_agg <- do.call("rbind", drm_groups(params2_agg, input$groupvar, 
                                             names(params2_agg)[2:ncol(params2_agg)]))
-      t1_agg[, input$groupvar] <- as.character(rep(unique(params2_agg[, input$groupvar]), 
-                                      each = 101))
+      t1_agg[, input$groupvar] <- rep(unique(params2_agg[, input$groupvar]), 
+                                      each = 101)
     }
     
     if(input$compare == TRUE & input$groups == FALSE) {
