@@ -488,11 +488,14 @@ shinyServer(function(input, output, session) {
         theme(panel.grid.major = element_line(colour = "#a7a7a7"))
     } else {
       if(input$compare == FALSE & input$groups == TRUE) {
-        f <- ggplot(tccdat(), aes(x = theta1, y = item_1.1)) + 
+        tccdat_local <- tccdat()
+        tccdat_local[, input$groupvar] <- as.character(tccdat_local[, input$groupvar])
+        f <- ggplot(tccdat_local, aes(x = theta1, y = item_1.1)) + 
           theme_bw(base_size = 16)
-        f <- f + geom_line(size = 1, aes_string(color = input$groupvar)) +
+        f <- f + geom_line(size = 1, aes_string(color = input$groupvar, 
+                                                group = input$groupvar)) +
           geom_point(size = 0, aes_string(color = input$groupvar)) +
-          scale_color_discrete("Group") + 
+          scale_color_discrete() + 
           scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                              breaks = seq(0, 1, by = .1)) + 
           scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
