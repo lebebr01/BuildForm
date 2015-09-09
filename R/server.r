@@ -16,6 +16,7 @@ drm_groups <- function(params, group, item_stats) {
   
   tmp_drm <- lapply(1:length(tmp), function(xx) 
     drm(tmp[[xx]][, item_stats], seq(-5, 5, by = .1))@prob)
+  return(tmp_drm)
 }
 
 # Function to do iif by groups
@@ -24,6 +25,7 @@ iif_groups <- function(params, group, item_stats) {
   
   tmp_iif <- lapply(1:length(tmp), function(xx) 
     iif(tmp[[xx]][, item_stats], x = seq(-5, 5, by = .01)))
+  return(tmp_iif)
 }
 
 options(RCHART_WIDTH = 1200, RCHART_HEIGHT = 800, 
@@ -64,14 +66,16 @@ shinyServer(function(input, output, session) {
   })
   
   output$items <- renderUI({
+    it <- unique(params()[, input$idvar])
     selectizeInput('selectitems', 'Select Items Form 1', 
-                   choices = unique(params()[, input$idvar]),
+                   choices = it,
                    multiple = TRUE)
   })
   
   output$items_form2 <- renderUI({
+    it_2 <- unique(params()[, input$idvar])
     selectizeInput('selectitems_2', 'Select Items Form 2', 
-                   choices = unique(params()[, input$idvar]),
+                   choices = it_2,
                    multiple = TRUE)
   })
 
@@ -581,9 +585,16 @@ shinyServer(function(input, output, session) {
   
   output$tif <- renderPlot({
     if(input$groups == FALSE) {
-      paramsA_sort <- paramsA() %>%
-        select(a, b, c) %>%
-        arrange(b)
+      if(length(input$param_vals) == 1) {
+        paramsA_sort <- paramsA() %>%
+          select_(.dots = input$param_vals) %>%
+          arrange_(input$param_vals[1])
+      } else {
+        paramsA_sort <- paramsA() %>%
+          select_(.dots = input$param_vals) %>%
+          arrange_(input$param_vals[2])
+      }
+      
       nitems <- nrow(paramsA_sort)
       item.inf <- irtoys::iif(paramsA_sort, x = seq(-5, 5, by = .01))
       # plots of individual items by grade - using cumsum across columns of f
@@ -593,10 +604,17 @@ shinyServer(function(input, output, session) {
       item.cinf$id <- rep(1:ncol(item.inf$f), times = 1001)
       item.cinf$group <- ifelse(item.cinf$id == nitems, 1, 0)
     } else {
-      item.inf <- iif_groups(paramsA(), input$groupvar, c('a', 'b', 'c'))
+      params_iif <- paramsA() %>%
+        select_(.dots = c(input$groupvar, input$param_vals)) %>%
+        filter(complete.cases(.)) %>%
+        data.frame()
+      
+      item.inf <- iif_groups(params_iif, input$groupvar, 
+                             names(params_iif)[2:ncol(params_iif)])
       cinf <- lapply(1:length(item.inf), function(xx) 
         do.call("c", lapply(1:nrow(item.inf[[xx]]$f), function(ii) 
           cumsum(item.inf[[xx]]$f[ii, ]))))
+      
       item.cinf <- do.call("rbind", lapply(1:length(item.inf), function(xx)
         data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf[[xx]]$f)),
                    information = cinf[[xx]], id = rep(1:ncol(item.inf[[xx]]$f), times = 1001))))
