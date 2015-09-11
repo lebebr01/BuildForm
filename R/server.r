@@ -39,8 +39,8 @@ shinyServer(function(input, output, session) {
       inFile <- input$file1
       
       if(is.null(inFile)) { return(NULL) }
-      tmp <- read_csv(inFile$datapath, header=input$header, sep=input$sep, 
-               quote=input$quote, stringsAsFactors = FALSE)
+      tmp <- read_delim(inFile$datapath, col_names=input$header, delim=input$sep, 
+               quote=input$quote)
     } else {
       inFile <- input$file2
       
@@ -240,7 +240,9 @@ shinyServer(function(input, output, session) {
       t1 <- drm_groups(params2, input$groupvar, input$param_vals)
       uniq_groups <- sort(unique(params2[, input$groupvar]))
       item_names <- lapply(1:length(uniq_groups), function(xx)
-        unique(paste("item", filter_(params2, paste0(input$groupvar, '==', uniq_groups[xx]))[, input$idvar], sep = "_")))
+        unique(paste("item", filter_(params2, paste0(input$groupvar, '==', 
+                                                     sQuote(uniq_groups[xx])))[, input$idvar], 
+                     sep = "_")))
       # item_names <- unique(paste("item", paramsA()[, input$idvar], sep = "_"))
       t1 <- lapply(seq(t1), function(xx) {
         y <- data.frame(uniq_groups[xx], t1[[xx]])
