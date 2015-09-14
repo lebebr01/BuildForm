@@ -10,6 +10,23 @@ library(readxl)
 library(readr)
 library(grid)
 
+# Function to compute item information
+item_inf <- function(params, ability) {
+  p <- drm(params, ability)@prob
+  p_ability <- p[, 1]
+  p_inf <- p[, 2:ncol(p)]
+  
+  if(ncol(params) == 1) {
+    iif <- p_inf * (1 - p_inf)
+  } else {
+    if(ncol(params) == 2) {
+      iif <- sweep(p_inf * (1 - p_inf), 2, params[, 1]^2, '*') 
+    } else {
+      iif <- params[, 1]^2 
+    }
+  }
+}
+
 # Function to do drm by groups
 drm_groups <- function(params, group, item_stats) {
   tmp <- split(params, params[, group])
