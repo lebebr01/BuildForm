@@ -1,7 +1,6 @@
 library(shiny)
 library(DT)
 library(shinythemes)
-library(rCharts)
 
 shinyUI(navbarPage(theme = shinytheme("journal"),
   title = 'Form Building',

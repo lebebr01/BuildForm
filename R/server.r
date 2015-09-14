@@ -15,7 +15,7 @@ drm_groups <- function(params, group, item_stats) {
   tmp <- split(params, params[, group])
   
   tmp_drm <- lapply(1:length(tmp), function(xx) 
-    drm(tmp[[xx]][, item_stats], seq(-5, 5, by = .1))@prob)
+    drm(tmp[[xx]][, item_stats], seq(-5, 5, by = .01))@prob)
   return(tmp_drm)
 }
 
@@ -155,7 +155,7 @@ shinyServer(function(input, output, session) {
   
   output$ip2 <- renderDataTable(paramsA_2())
   
-  output$avgparams <- renderDataTable({
+  avgpars <- reactive({
     funcs <- sapply(1:length(input$param_vals), function(xx) 
       paste0('mean(', input$param_vals[xx], ')'))
     if(input$groups == FALSE) {
@@ -189,7 +189,11 @@ shinyServer(function(input, output, session) {
                            'mean_b', 'mean_c')]
       }
     }
-    datatable(avgpar)
+    return(avgpar)
+  })
+  
+  output$avgparams <- renderDataTable({
+    avgpars()
   })
   
   output$Vars <- renderUI({
@@ -225,7 +229,7 @@ shinyServer(function(input, output, session) {
         filter(complete.cases(.))
       params2 <- data.frame(params2)
       
-      t1 <- data.frame(drm(params2[, input$param_vals], seq(-5, 5, by = .1))@prob)
+      t1 <- data.frame(drm(params2[, input$param_vals], seq(-5, 5, by = .05))@prob)
       item_names <- paste("item", params2[, input$idvar], sep = "_")
       colnames(t1) <- c("theta1", item_names)
       t1_names <- paste0(names(t1)[2], ':', names(t1)[ncol(t1)])
@@ -392,7 +396,7 @@ shinyServer(function(input, output, session) {
       t1_agg <- do.call("rbind", drm_groups(params2_agg, input$groupvar, 
                                             names(params2_agg)[2:ncol(params2_agg)]))
       t1_agg[, input$groupvar] <- rep(unique(params2_agg[, input$groupvar]), 
-                                      each = 101)
+                                      each = 1001)
     }
     
     if(input$compare == TRUE & input$groups == FALSE) {
@@ -411,7 +415,7 @@ shinyServer(function(input, output, session) {
         t2_agg <- do.call("rbind", drm_groups(params3_agg, input$groupvar, 
                                               c('mean_a', 'mean_b', 'mean_c')))
         t2_agg[, input$groupvar] <- rep(unique(paramsA_2()[, input$groupvar]), 
-                                        each = 101)
+                                        each = 1001)
         t2_agg$form <- 'Form 2'
         t1_agg$form <- 'Form 1'
         t1_agg <- rbind(t1_agg, t2_agg)
@@ -542,47 +546,14 @@ shinyServer(function(input, output, session) {
   
   output$click_tcc_comb_info <- renderDataTable({
     dat <- tccdat()
-    res <- nearPoints(tccdat(), input$click_tcc_comb,
+    res <- nearPoints(tccdat(), input$click_tcc_comb, threshold = 10,
                       addDist = TRUE)
+    grp <- paste(sQuote(unique(res[, input$groupvar])), collapse = ",")
     
-#     if(input$groups == FALSE) {
-#       params2_agg <- summarise(paramsA(), mean_a = mean(a), 
-#                                mean_b = mean(b), mean_c = mean(c))
-#       params2_agg$form <- 'Form 1'
-#       avgpars <- params2_agg
-#     } else {
-#       params2_agg <- paramsA() %>%
-#         group_by_(input$groupvar) %>%
-#         summarise(mean_a = mean(a), 
-#                   mean_b = mean(b), mean_c = mean(c)) %>%
-#         data.frame()
-#       params2_agg$form <- 'Form 1'
-#       avgpars <- params2_agg
-#     }
-#     if(input$compare == TRUE & input$groups == FALSE) {
-#       params3_agg <- summarise(paramsA_2(), mean_a = mean(a), 
-#                                mean_b = mean(b), mean_c = mean(c))
-#       params3_agg$form <- 'Form 2'
-#       avgpars <- rbind(params2_agg, params3_agg)
-#     } else {
-#       params3_agg <- paramsA_2() %>%
-#         group_by_(input$groupvar) %>%
-#         summarise(mean_a = mean(a), 
-#                   mean_b = mean(b), mean_c = mean(c)) %>%
-#         data.frame()
-#       params3_agg$form <- 'Form 2'
-#       avgpars <- rbind(params2_agg, params3_agg)
-#     }
-#     
-#     if(input$compare) {
-#       avgpars <- filter(avgpars, form %in% unique(res$form))
-#     }
-#     if(input$groups) {
-#       avgpars <- filter_(avgpars, paste0(input$groupvar, '%in% c(',
-#                                          unique(res[, input$groupvar]), ')'))
-#     }
-    
-    datatable(res)
+    tmp <- avgpars() %>%
+        filter_(.dots = paste0(input$groupvar, '%in% c(', 
+                               grp, ")"))
+    datatable(tmp)
   })
   
   output$tif <- renderPlot({
@@ -590,11 +561,13 @@ shinyServer(function(input, output, session) {
       if(length(input$param_vals) == 1) {
         paramsA_sort <- paramsA() %>%
           select_(.dots = input$param_vals) %>%
-          arrange_(input$param_vals[1])
+          arrange_(input$param_vals[1]) %>%
+          data.frame()
       } else {
         paramsA_sort <- paramsA() %>%
           select_(.dots = input$param_vals) %>%
-          arrange_(input$param_vals[2])
+          arrange_(input$param_vals[2]) %>%
+          data.frame()
       }
       
       nitems <- nrow(paramsA_sort)
