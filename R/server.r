@@ -1,6 +1,5 @@
 library(shiny)
 library(DT)
-library(irtoys)
 library(plink)
 library(ggplot2)
 library(dplyr)
@@ -15,16 +14,19 @@ item_inf <- function(params, ability) {
   p <- drm(params, ability)@prob
   p_ability <- p[, 1]
   p_inf <- p[, 2:ncol(p)]
-  
-  if(ncol(params) == 1) {
-    iif <- p_inf * (1 - p_inf)
+
+  if(ncol(params) == 3 & any(params[, 3] != 0)) {
+    params[, 3] <- 0
+    q <- drm(params, ability)@prob
+    q_inf <- q[, 2:ncol(q)]
+    f <- q_inf^2 * (1 - p_inf)/p_inf
   } else {
-    if(ncol(params) == 2) {
-      iif <- sweep(p_inf * (1 - p_inf), 2, params[, 1]^2, '*') 
-    } else {
-      iif <- params[, 1]^2 
-    }
+    f <- p_inf * (1 - p_inf)
   }
+  f <- sweep(f, 2, params[, 1], '*')
+  
+  iif <- data.frame(p_ability, f)
+  return(iif)
 }
 
 # Function to do drm by groups
@@ -41,7 +43,7 @@ iif_groups <- function(params, group, item_stats) {
   tmp <- split(params, params[, group])
   
   tmp_iif <- lapply(1:length(tmp), function(xx) 
-    iif(tmp[[xx]][, item_stats], x = seq(-5, 5, by = .01)))
+    item_inf(tmp[[xx]][, item_stats], x = seq(-5, 5, by = .01)))
   return(tmp_iif)
 }
 
@@ -588,7 +590,7 @@ shinyServer(function(input, output, session) {
       }
       
       nitems <- nrow(paramsA_sort)
-      item.inf <- irtoys::iif(paramsA_sort, x = seq(-5, 5, by = .01))
+      item.inf <- item_inf(paramsA_sort, x = seq(-5, 5, by = .01))
       # plots of individual items by grade - using cumsum across columns of f
       cinf <- do.call("c", lapply(1:nrow(item.inf$f), function(xx) cumsum(item.inf$f[xx, ])))
       item.cinf <- data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf$f)),
@@ -619,7 +621,7 @@ shinyServer(function(input, output, session) {
         select(a, b, c) %>%
         arrange(b)
       nitems <- nrow(paramsA_sort_2)
-      item.inf_2 <- irtoys::iif(paramsA_sort_2, x = seq(-5, 5, by = .01))
+      item.inf_2 <- item_inf(paramsA_sort_2, x = seq(-5, 5, by = .01))
       # plots of individual items by grade - using cumsum across columns of f
       cinf_2 <- do.call("c", lapply(1:nrow(item.inf_2$f), function(xx) cumsum(item.inf_2$f[xx, ])))
       item.cinf_2 <- data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2$f)),
