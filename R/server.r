@@ -22,9 +22,12 @@ item_inf <- function(params, ability) {
     if(ncol(params) == 2) {
       iif <- sweep(p_inf * (1 - p_inf), 2, params[, 1]^2, '*') 
     } else {
-      iif <- params[, 1]^2 
+      q <- drm(params[, 1:2], ability)@prob
+      q_inf <- q[, 2:ncol(q)]
+      iif <- sweep(q_inf^2 * (1 - p_inf)/p_inf, 2, params[, 1]^2, '*') 
     }
   }
+  return(as.matrix(iif))
 }
 
 # Function to do drm by groups
@@ -41,7 +44,7 @@ iif_groups <- function(params, group, item_stats) {
   tmp <- split(params, params[, group])
   
   tmp_iif <- lapply(1:length(tmp), function(xx) 
-    iif(tmp[[xx]][, item_stats], x = seq(-5, 5, by = .01)))
+    item_inf(tmp[[xx]][, item_stats], ability = seq(-5, 5, by = .01)))
   return(tmp_iif)
 }
 
@@ -190,20 +193,20 @@ shinyServer(function(input, output, session) {
     
     if(input$compare == TRUE & input$groups == FALSE) {
       avgpar2 <- paramsA_2() %>%
-        summarise(Form = 'Form 2', Numitems = n(), mean_a = mean(a), 
-                  mean_b = mean(b), mean_c = mean(c))
+        select_(.dots = input$param_vals) %>%
+        filter(complete.cases(.)) %>%
+        summarise_(.dots = c(list("'Form 2'", "n()"), funcs))
       avgpar <- rbind(avgpar, avgpar2)
     } else {
       if(input$compare == TRUE & input$groups == TRUE) {
         avgpar2 <- paramsA_2() %>%
+          select_(.dots = c(input$groupvar, input$param_vals)) %>%
+          filter(complete.cases(.)) %>%
           group_by_(input$groupvar) %>%
-          summarise(Numitems = n(), mean_a = mean(a), 
-                    mean_b = mean(b), mean_c = mean(c))
-        avgpar$Form <- 'Form 1'
-        avgpar2$Form <- 'Form 2'
+          summarise_(.dots = c(list("'Form 2'", "n()"), funcs))
         avgpar <- rbind(avgpar, avgpar2)
-        avgpar <- avgpar[c('Form', input$groupvar, 'Numitems', 'mean_a', 
-                           'mean_b', 'mean_c')]
+#         avgpar <- avgpar[c('Form', input$groupvar, 'Numitems', 'mean_a', 
+#                            'mean_b', 'mean_c')]
       }
     }
     return(avgpar)
@@ -588,12 +591,12 @@ shinyServer(function(input, output, session) {
       }
       
       nitems <- nrow(paramsA_sort)
-      item.inf <- irtoys::iif(paramsA_sort, x = seq(-5, 5, by = .01))
-      # plots of individual items by grade - using cumsum across columns of f
-      cinf <- do.call("c", lapply(1:nrow(item.inf$f), function(xx) cumsum(item.inf$f[xx, ])))
-      item.cinf <- data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf$f)),
+      item.inf <- item_inf(paramsA_sort, ability = seq(-5, 5, by = .01))
+      # plots of individual items by grade - using cumsum across columns
+      cinf <- do.call("c", lapply(1:nrow(item.inf), function(xx) cumsum(item.inf[xx, ])))
+      item.cinf <- data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf)),
                               information = cinf)
-      item.cinf$id <- rep(1:ncol(item.inf$f), times = 1001)
+      item.cinf$id <- rep(1:ncol(item.inf), times = 1001)
       item.cinf$group <- ifelse(item.cinf$id == nitems, 1, 0)
     } else {
       params_iif <- paramsA() %>%
@@ -604,27 +607,36 @@ shinyServer(function(input, output, session) {
       item.inf <- iif_groups(params_iif, input$groupvar, 
                              names(params_iif)[2:ncol(params_iif)])
       cinf <- lapply(1:length(item.inf), function(xx) 
-        do.call("c", lapply(1:nrow(item.inf[[xx]]$f), function(ii) 
-          cumsum(item.inf[[xx]]$f[ii, ]))))
+        do.call("c", lapply(1:nrow(item.inf[[xx]]), function(ii) 
+          cumsum(item.inf[[xx]][ii, ]))))
       
       item.cinf <- do.call("rbind", lapply(1:length(item.inf), function(xx)
-        data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf[[xx]]$f)),
-                   information = cinf[[xx]], id = rep(1:ncol(item.inf[[xx]]$f), times = 1001))))
+        data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf[[xx]])),
+                   information = cinf[[xx]], id = rep(1:ncol(item.inf[[xx]]), times = 1001))))
       item.cinf[, input$groupvar] <- rep(unique(paramsA()[, input$groupvar]), 
                                          each = 1001*length(unique(paramsA()[, input$idvar])))
       item.cinf$group <- ifelse(item.cinf$id == length(unique(paramsA()[, input$idvar])), 1, 0)
     }
     if(input$compare == TRUE & input$groups == FALSE) {
-      paramsA_sort_2 <- paramsA_2() %>%
-        select(a, b, c) %>%
-        arrange(b)
+      if(length(input$param_vals) == 1) {
+        paramsA_sort_2 <- paramsA_2() %>%
+          select_(.dots = input$param_vals) %>%
+          arrange_(input$param_vals[1]) %>%
+          data.frame()
+      } else {
+        paramsA_sort_2 <- paramsA_2() %>%
+          select_(.dots = input$param_vals) %>%
+          arrange_(input$param_vals[2]) %>%
+          data.frame()
+      }
+      
       nitems <- nrow(paramsA_sort_2)
-      item.inf_2 <- irtoys::iif(paramsA_sort_2, x = seq(-5, 5, by = .01))
-      # plots of individual items by grade - using cumsum across columns of f
-      cinf_2 <- do.call("c", lapply(1:nrow(item.inf_2$f), function(xx) cumsum(item.inf_2$f[xx, ])))
-      item.cinf_2 <- data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2$f)),
+      item.inf_2 <- item_inf(paramsA_sort_2, ability = seq(-5, 5, by = .01))
+      # plots of individual items by grade - using cumsum across columns
+      cinf_2 <- do.call("c", lapply(1:nrow(item.inf_2), function(xx) cumsum(item.inf_2[xx, ])))
+      item.cinf_2 <- data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2)),
                                 information = cinf_2)
-      item.cinf_2$id <- rep(1:ncol(item.inf_2$f), times = 1001)
+      item.cinf_2$id <- rep(1:ncol(item.inf_2), times = 1001)
       item.cinf_2$group <- ifelse(item.cinf_2$id == nitems, 1, 0)
       item.cinf_2$form <- 'Form 2'
       item.cinf$form <-'Form 1'
@@ -633,11 +645,11 @@ shinyServer(function(input, output, session) {
       if(input$compare == TRUE & input$groups == TRUE) {
         item.inf_2 <- iif_groups(paramsA_2(), input$groupvar, c('a', 'b', 'c'))
         cinf_2 <- lapply(1:length(item.inf_2), function(xx) 
-          do.call("c", lapply(1:nrow(item.inf_2[[xx]]$f), function(ii) 
-            cumsum(item.inf_2[[xx]]$f[ii, ]))))
+          do.call("c", lapply(1:nrow(item.inf_2[[xx]]), function(ii) 
+            cumsum(item.inf_2[[xx]][ii, ]))))
         item.cinf_2 <- do.call("rbind", lapply(1:length(item.inf_2), function(xx)
-          data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2[[xx]]$f)),
-                     information = cinf_2[[xx]], id = rep(1:ncol(item.inf_2[[xx]]$f), times = 1001))))
+          data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2[[xx]])),
+                     information = cinf_2[[xx]], id = rep(1:ncol(item.inf_2[[xx]]), times = 1001))))
         item.cinf_2[, input$groupvar] <- rep(unique(paramsA_2()[, input$groupvar]), 
                                            each = 1001*length(unique(paramsA_2()[, input$idvar])))
         item.cinf_2$group <- ifelse(item.cinf_2$id == length(unique(paramsA_2()[, input$idvar])), 1, 0)
