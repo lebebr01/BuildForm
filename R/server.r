@@ -1,6 +1,5 @@
 library(shiny)
 library(DT)
-library(irtoys)
 library(plink)
 library(ggplot2)
 library(dplyr)
@@ -15,9 +14,12 @@ item_inf <- function(params, ability) {
   p <- drm(params, ability)@prob
   p_ability <- p[, 1]
   p_inf <- p[, 2:ncol(p)]
-  
-  if(ncol(params) == 1) {
-    iif <- p_inf * (1 - p_inf)
+
+  if(ncol(params) == 3 & any(params[, 3] != 0)) {
+    params[, 3] <- 0
+    q <- drm(params, ability)@prob
+    q_inf <- q[, 2:ncol(q)]
+    f <- q_inf^2 * (1 - p_inf)/p_inf
   } else {
     if(ncol(params) == 2) {
       iif <- sweep(p_inf * (1 - p_inf), 2, params[, 1]^2, '*') 
@@ -43,7 +45,7 @@ drm_groups <- function(params, group, item_stats) {
 iif_groups <- function(params, group, item_stats) {
   tmp <- split(params, params[, group])
   
-  tmp_iif <- lapply(1:length(tmp), function(xx) 
+  tmp_iif <- lapply(1:length(tmp), function(xx)
     item_inf(tmp[[xx]][, item_stats], ability = seq(-5, 5, by = .01)))
   return(tmp_iif)
 }
