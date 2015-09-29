@@ -15,11 +15,8 @@ item_inf <- function(params, ability) {
   p_ability <- p[, 1]
   p_inf <- p[, 2:ncol(p)]
 
-  if(ncol(params) == 3 & any(params[, 3] != 0)) {
-    params[, 3] <- 0
-    q <- drm(params, ability)@prob
-    q_inf <- q[, 2:ncol(q)]
-    f <- q_inf^2 * (1 - p_inf)/p_inf
+  if(ncol(params) == 1) {
+    iif <- p_inf * (1 - p_inf)
   } else {
     if(ncol(params) == 2) {
       iif <- sweep(p_inf * (1 - p_inf), 2, params[, 1]^2, '*') 
@@ -615,10 +612,11 @@ shinyServer(function(input, output, session) {
       item.cinf <- do.call("rbind", lapply(1:length(item.inf), function(xx)
         data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf[[xx]])),
                    information = cinf[[xx]], id = rep(1:ncol(item.inf[[xx]]), times = 1001))))
-      item.cinf[, input$groupvar] <- rep(unique(paramsA()[, input$groupvar]), 
+      item.cinf[, input$groupvar] <- rep(as.matrix(unique(paramsA()[, input$groupvar])), 
                                          each = 1001*length(unique(paramsA()[, input$idvar])))
       item.cinf$group <- ifelse(item.cinf$id == length(unique(paramsA()[, input$idvar])), 1, 0)
     }
+    
     if(input$compare == TRUE & input$groups == FALSE) {
       if(length(input$param_vals) == 1) {
         paramsA_sort_2 <- paramsA_2() %>%
