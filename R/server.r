@@ -264,7 +264,7 @@ shinyServer(function(input, output, session) {
       uniq_groups <- sort(unique(params2[, input$groupvar]))
       item_names <- lapply(1:length(uniq_groups), function(xx)
         unique(paste("item", filter_(params2, paste0(input$groupvar, '==', 
-                                                     sQuote(uniq_groups[xx])))[, input$idvar], 
+                                          sQuote(uniq_groups[xx])))[, input$idvar], 
                      sep = "_")))
       # item_names <- unique(paste("item", paramsA()[, input$idvar], sep = "_"))
       t1 <- lapply(seq(t1), function(xx) {
@@ -296,14 +296,29 @@ shinyServer(function(input, output, session) {
     t1 <- rbind(t1, t2)
   } else {
     if(input$compare == TRUE & input$groups == TRUE) {
-      t2 <- drm_groups(paramsA_2(), input$groupvar, input$param_vals)
-      item_names <- unique(paste("item", paramsA_2()[, input$idvar], sep = "_"))
-      t2 <- do.call("rbind", lapply(seq(t2), function(xx) {
-        y <- data.frame(unique(paramsA_2()[, input$groupvar])[xx], t2[[xx]])
-        names(y) <- c(input$groupvar, "theta1", item_names)
+      params3 <- paramsA_2() %>%
+        select_(.dots = c(input$idvar, input$groupvar, input$param_vals)) %>%
+        filter(complete.cases(.))
+      params3 <- data.frame(params3)
+      
+      t2 <- drm_groups(params3, input$groupvar, input$param_vals)
+      uniq_groups <- sort(unique(params3[, input$groupvar]))
+      item_names <- lapply(1:length(uniq_groups), function(xx)
+        unique(paste("item", filter_(params3, paste0(input$groupvar, '==', 
+                                          sQuote(uniq_groups[xx])))[, input$idvar], 
+                     sep = "_")))
+      # item_names <- unique(paste("item", paramsA()[, input$idvar], sep = "_"))
+      t2 <- lapply(seq(t2), function(xx) {
+        y <- data.frame(uniq_groups[xx], t2[[xx]])
+        names(y) <- c(input$groupvar, "theta1", item_names[[xx]])
+        t2_names <- paste0(item_names[[xx]][1], ':', 
+                           item_names[[xx]][length(item_names[[xx]])])
+        y <- y %>%
+          gather(item, prob, eval(parse(text = t2_names)))
         return(y)
       })
-      )
+      t2 <- do.call("rbind", t2)
+      
       t2_names <- paste0(names(t2)[3], ':', names(t2)[ncol(t2)])
       t2 <- t2 %>%
         gather(item, prob, eval(parse(text = t2_names)))
@@ -609,12 +624,14 @@ shinyServer(function(input, output, session) {
         do.call("c", lapply(1:nrow(item.inf[[xx]]), function(ii) 
           cumsum(item.inf[[xx]][ii, ]))))
       
+      nitems <- sapply(item.inf, ncol)
       item.cinf <- do.call("rbind", lapply(1:length(item.inf), function(xx)
         data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf[[xx]])),
-                   information = cinf[[xx]], id = rep(1:ncol(item.inf[[xx]]), times = 1001))))
+                   information = cinf[[xx]], 
+                   id = rep(1:ncol(item.inf[[xx]]), times = 1001))))
       item.cinf[, input$groupvar] <- rep(as.matrix(unique(paramsA()[, input$groupvar])), 
-                                         each = 1001*length(unique(paramsA()[, input$idvar])))
-      item.cinf$group <- ifelse(item.cinf$id == length(unique(paramsA()[, input$idvar])), 1, 0)
+                                         each = 1001*nitems[1])
+      item.cinf$group <- ifelse(item.cinf$id == nitems[1], 1, 0)
     }
     
     if(input$compare == TRUE & input$groups == FALSE) {
@@ -647,12 +664,14 @@ shinyServer(function(input, output, session) {
         cinf_2 <- lapply(1:length(item.inf_2), function(xx) 
           do.call("c", lapply(1:nrow(item.inf_2[[xx]]), function(ii) 
             cumsum(item.inf_2[[xx]][ii, ]))))
+        
+        nitems_2 <- sapply(item.inf_2, ncol)
         item.cinf_2 <- do.call("rbind", lapply(1:length(item.inf_2), function(xx)
           data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2[[xx]])),
                      information = cinf_2[[xx]], id = rep(1:ncol(item.inf_2[[xx]]), times = 1001))))
         item.cinf_2[, input$groupvar] <- rep(unique(paramsA_2()[, input$groupvar]), 
-                                           each = 1001*length(unique(paramsA_2()[, input$idvar])))
-        item.cinf_2$group <- ifelse(item.cinf_2$id == length(unique(paramsA_2()[, input$idvar])), 1, 0)
+                                           each = 1001*nitems_2[1])
+        item.cinf_2$group <- ifelse(item.cinf_2$id == nitems_2[1], 1, 0)
         item.cinf_2$form <- 'Form 2'
         item.cinf$form <-'Form 1'
         item.cinf <- rbind(item.cinf, item.cinf_2)
