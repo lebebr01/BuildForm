@@ -181,20 +181,23 @@ shinyServer(function(input, output, session) {
       avgpar <- paramsA() %>%
         select_(.dots = input$param_vals) %>%
         filter(complete.cases(.)) %>%
-        summarise_(.dots = c(list("'Form 1'", "n()"), funcs))
+        summarise_(.dots = c(list("'Form 1'", "n()"), funcs)) %>%
+        setNames(c('Form', 'N', unlist(funcs)))
     } else {
       avgpar <- paramsA() %>%
         select_(.dots = c(input$groupvar, input$param_vals)) %>%
         filter(complete.cases(.)) %>%
         group_by_(input$groupvar) %>%
-        summarise_(.dots = c(list("'Form 1'", "n()"), funcs))
+        summarise_(.dots = c(list("'Form 1'", "n()"), funcs)) %>%
+        setNames(c(input$groupvar, 'Form', 'N', unlist(funcs)))
     }
     
     if(input$compare == TRUE & input$groups == FALSE) {
       avgpar2 <- paramsA_2() %>%
         select_(.dots = input$param_vals) %>%
         filter(complete.cases(.)) %>%
-        summarise_(.dots = c(list("'Form 2'", "n()"), funcs))
+        summarise_(.dots = c(list("'Form 2'", "n()"), funcs)) %>%
+        setNames(c('Form', 'N', unlist(funcs)))
       avgpar <- rbind(avgpar, avgpar2)
     } else {
       if(input$compare == TRUE & input$groups == TRUE) {
@@ -202,10 +205,9 @@ shinyServer(function(input, output, session) {
           select_(.dots = c(input$groupvar, input$param_vals)) %>%
           filter(complete.cases(.)) %>%
           group_by_(input$groupvar) %>%
-          summarise_(.dots = c(list("'Form 2'", "n()"), funcs))
+          summarise_(.dots = c(list("'Form 2'", "n()"), funcs)) %>%
+          setNames(c(input$groupvar, 'Form', 'N', unlist(funcs)))
         avgpar <- rbind(avgpar, avgpar2)
-#         avgpar <- avgpar[c('Form', input$groupvar, 'Numitems', 'mean_a', 
-#                            'mean_b', 'mean_c')]
       }
     }
     return(avgpar)
@@ -281,16 +283,17 @@ shinyServer(function(input, output, session) {
     
   if(input$compare == TRUE & input$groups == FALSE) {
     params3 <- paramsA_2() %>%
-      select_(.dots = input$param_vals) %>%
+      select_(.dots = c(input$idvar, input$param_vals)) %>%
       filter(complete.cases(.))
     params3 <- data.frame(params3)
     
-    t2 <- data.frame(drm(params3, seq(-5, 5, by = .1))@prob)
-    item_names <- paste("item", paramsA_2()[, input$idvar], sep = "_")
+    t2 <- data.frame(drm(params3[, input$param_vals], seq(-5, 5, by = .05))@prob)
+    item_names <- paste("item", params3[, input$idvar], sep = "_")
     colnames(t2) <- c("theta1", item_names)
     t2_names <- paste0(names(t2)[2], ':', names(t2)[ncol(t2)])
     t2 <- t2 %>%
       gather(item, prob, eval(parse(text = t2_names)))
+    
     t2$form <- 'Form 2'
     t1$form <- 'Form 1'
     t1 <- rbind(t1, t2)
@@ -434,21 +437,27 @@ shinyServer(function(input, output, session) {
     }
     
     if(input$compare == TRUE & input$groups == FALSE) {
-      params3_agg <- summarise(paramsA_2(), mean_a = mean(a), mean_b = mean(b), mean_c = mean(c))
+      params3_agg <- paramsA_2() %>%
+        select_(.dots = input$param_vals) %>%
+        filter(complete.cases(.)) %>%
+        summarise_(.dots = funcs) %>%
+        data.frame()
       t2_agg <- data.frame(drm(params3_agg, seq(-5, 5, by = .01))@prob)
+      
       t2_agg$form <- 'Form 2'
       t1_agg$form <- 'Form 1'
       t1_agg <- rbind(t1_agg, t2_agg)
     } else {
       if(input$compare == TRUE & input$groups == TRUE) {
         params3_agg <- paramsA_2() %>%
+          select_(.dots = c(input$groupvar, input$param_vals)) %>%
+          filter(complete.cases(.)) %>%
           group_by_(input$groupvar) %>%
-          summarise(mean_a = mean(a), 
-                    mean_b = mean(b), mean_c = mean(c)) %>%
+          summarise_(.dots = c(funcs)) %>%
           data.frame()
         t2_agg <- do.call("rbind", drm_groups(params3_agg, input$groupvar, 
-                                              c('mean_a', 'mean_b', 'mean_c')))
-        t2_agg[, input$groupvar] <- rep(unique(paramsA_2()[, input$groupvar]), 
+                                              names(params3_agg)[2:ncol(params3_agg)]))
+        t2_agg[, input$groupvar] <- rep(unique(params3_agg[, input$groupvar]), 
                                         each = 1001)
         t2_agg$form <- 'Form 2'
         t1_agg$form <- 'Form 1'
@@ -660,7 +669,13 @@ shinyServer(function(input, output, session) {
       item.cinf <- rbind(item.cinf, item.cinf_2)
     } else {
       if(input$compare == TRUE & input$groups == TRUE) {
-        item.inf_2 <- iif_groups(paramsA_2(), input$groupvar, c('a', 'b', 'c'))
+        params_iif_2 <- paramsA_2() %>%
+          select_(.dots = c(input$groupvar, input$param_vals)) %>%
+          filter(complete.cases(.)) %>%
+          data.frame()
+        
+        item.inf_2 <- iif_groups(params_iif_2, input$groupvar, 
+                                 names(params_iif_2)[2:ncol(params_iif_2)])
         cinf_2 <- lapply(1:length(item.inf_2), function(xx) 
           do.call("c", lapply(1:nrow(item.inf_2[[xx]]), function(ii) 
             cumsum(item.inf_2[[xx]][ii, ]))))
