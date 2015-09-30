@@ -322,9 +322,6 @@ shinyServer(function(input, output, session) {
       })
       t2 <- do.call("rbind", t2)
       
-      t2_names <- paste0(names(t2)[3], ':', names(t2)[ncol(t2)])
-      t2 <- t2 %>%
-        gather(item, prob, eval(parse(text = t2_names)))
       t2$form <- 'Form 2'
       t1$form <- 'Form 1'
       t1 <- rbind(t1, t2)
@@ -683,8 +680,9 @@ shinyServer(function(input, output, session) {
         nitems_2 <- sapply(item.inf_2, ncol)
         item.cinf_2 <- do.call("rbind", lapply(1:length(item.inf_2), function(xx)
           data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2[[xx]])),
-                     information = cinf_2[[xx]], id = rep(1:ncol(item.inf_2[[xx]]), times = 1001))))
-        item.cinf_2[, input$groupvar] <- rep(unique(paramsA_2()[, input$groupvar]), 
+                     information = cinf_2[[xx]], 
+                     id = rep(1:ncol(item.inf_2[[xx]]), times = 1001))))
+        item.cinf_2[, input$groupvar] <- rep(as.matrix(unique(paramsA_2()[, input$groupvar])), 
                                            each = 1001*nitems_2[1])
         item.cinf_2$group <- ifelse(item.cinf_2$id == nitems_2[1], 1, 0)
         item.cinf_2$form <- 'Form 2'
