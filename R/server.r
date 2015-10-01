@@ -635,9 +635,10 @@ shinyServer(function(input, output, session) {
         data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf[[xx]])),
                    information = cinf[[xx]], 
                    id = rep(1:ncol(item.inf[[xx]]), times = 1001))))
-      item.cinf[, input$groupvar] <- rep(as.matrix(unique(paramsA()[, input$groupvar])), 
-                                         each = 1001*nitems[1])
-      item.cinf$group <- ifelse(item.cinf$id == nitems[1], 1, 0)
+      item.cinf[, input$groupvar] <- do.call('c', lapply(1:length(nitems), function(ii) 
+        rep(as.matrix(unique(paramsA()[, input$groupvar]))[ii], times = 1001*nitems[ii])))
+      item.cinf$group <- do.call('c', lapply(1:length(nitems), function(ii) 
+        rep(rep(0:1, times = c((nitems[ii] - 1), 1)), times = 1001)))
     }
     
     if(input$compare == TRUE & input$groups == FALSE) {
@@ -682,9 +683,10 @@ shinyServer(function(input, output, session) {
           data.frame(ability = rep(seq(-5, 5, by = .01), each = ncol(item.inf_2[[xx]])),
                      information = cinf_2[[xx]], 
                      id = rep(1:ncol(item.inf_2[[xx]]), times = 1001))))
-        item.cinf_2[, input$groupvar] <- rep(as.matrix(unique(paramsA_2()[, input$groupvar])), 
-                                           each = 1001*nitems_2[1])
-        item.cinf_2$group <- ifelse(item.cinf_2$id == nitems_2[1], 1, 0)
+        item.cinf_2[, input$groupvar] <- do.call('c', lapply(1:length(nitems_2), function(ii) 
+          rep(as.matrix(unique(paramsA_2()[, input$groupvar]))[ii], times = 1001*nitems_2[ii])))
+        item.cinf_2$group <- do.call('c', lapply(1:length(nitems_2), function(ii) 
+          rep(rep(0:1, times = c((nitems_2[ii] - 1), 1)), times = 1001)))
         item.cinf_2$form <- 'Form 2'
         item.cinf$form <-'Form 1'
         item.cinf <- rbind(item.cinf, item.cinf_2)
