@@ -47,6 +47,21 @@ iif_groups <- function(params, group, item_stats) {
   return(tmp_iif)
 }
 
+icc_plot <- function(data) {
+  ggplot(data, aes(x = theta1, y = prob, color = factor(item))) + 
+        theme_bw(base_size = 16) +
+        geom_line(size = 1) + 
+        geom_point(size = 0) + 
+        scale_color_discrete("Item") + 
+        scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
+                           breaks = seq(0, 1, by = .1)) + 
+        scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
+        theme(axis.title.y = element_text(vjust = 1.5), 
+              axis.title.x = element_text(vjust = -0.25)) + 
+        theme(panel.grid.major = element_line(colour = "#a7a7a7"))
+}
+
+
 options(RCHART_WIDTH = 1200, RCHART_HEIGHT = 800, 
         useFancyQuotes = FALSE)
 shinyServer(function(input, output, session) {
@@ -333,55 +348,17 @@ shinyServer(function(input, output, session) {
   output$icc1 <- renderPlot({
         # plot TCC for each item
     if(input$compare == FALSE & input$groups == FALSE) {
-      f <- ggplot(iccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
-        theme_bw(base_size = 16)
-      f <- f + geom_line(size = 1) + 
-        geom_point(size = 0) + 
-        scale_color_discrete("Item") + 
-        scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                           breaks = seq(0, 1, by = .1)) + 
-        scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-        theme(axis.title.y = element_text(vjust = 1.5), 
-              axis.title.x = element_text(vjust = -0.25)) + 
-        theme(panel.grid.major = element_line(colour = "#a7a7a7"))
+      icc_plot(iccdat())
     } else {
       if(input$compare == TRUE & input$groups == FALSE) {
-        f <- ggplot(iccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
-          theme_bw(base_size = 16)
-        f <- f + geom_line(size = 1) +
-          geom_point(size = 0) + 
-          scale_color_discrete("Item") + 
-          scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                             breaks = seq(0, 1, by = .1)) + 
-          scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-          theme(axis.title.y = element_text(vjust = 1.5), 
-                axis.title.x = element_text(vjust = -0.25)) +
-          theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
+        icc_plot(iccdat()) +
           facet_grid(form ~ .)
       } else {
         if(input$groups == TRUE & input$compare == FALSE) {
-          f <- ggplot(iccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
-            theme_bw(base_size = 16)
-          f <- f + geom_line(size = 1) +
-            geom_point(size = 0) + 
-            scale_color_discrete("Item") + 
-            scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                               breaks = seq(0, 1, by = .1)) + 
-            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-            theme(axis.title.y = element_text(vjust = 1.5), 
-                  axis.title.x = element_text(vjust = -0.25)) + 
-            theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
+          icc_plot(iccdat()) +
             facet_grid(reformulate(input$groupvar, "."))
         } else {
-          f <- ggplot(iccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
-            theme_bw(base_size = 16)
-          f <- f + geom_line(size = 1) +
-            geom_point(size = 0) + 
-            scale_color_discrete("Item") + 
-            scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                               breaks = seq(0, 1, by = .1)) + 
-            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-            theme(panel.grid.major = element_line(colour = "#a7a7a7")) +
+          icc_plot(iccdat()) +
             facet_grid(reformulate(input$groupvar, "form")) + 
             theme(axis.title.y = element_text(vjust = 1.5), 
                   axis.title.x = element_text(vjust = -0.25),
@@ -389,7 +366,7 @@ shinyServer(function(input, output, session) {
         }
       }
     }
-     f
+    # f
   })
   
   output$click_info <- renderDataTable({
@@ -468,7 +445,7 @@ shinyServer(function(input, output, session) {
     if(input$compare == FALSE & input$groups == FALSE) {
       f <- ggplot(iccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
         theme_bw(base_size = 16)
-      f<- f + geom_line(size = 1, alpha = .5, show_guide = FALSE) +
+      f<- f + geom_line(size = 1, alpha = .5, show.legend = FALSE) +
         #scale_linetype_discrete("Method") + 
         scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                            breaks = seq(0, 1, by = .1)) + 
@@ -495,7 +472,7 @@ shinyServer(function(input, output, session) {
         if(input$compare == TRUE & input$groups == FALSE) {
           f <- ggplot(iccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
             theme_bw(base_size = 16)
-          f <- f + geom_line(size = 1, show_guide = FALSE) +
+          f <- f + geom_line(size = 1, show.legend = FALSE) +
             #scale_linetype_discrete("Method") + 
             scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                                breaks = seq(0, 1, by = .1)) + 
@@ -508,7 +485,7 @@ shinyServer(function(input, output, session) {
         } else {
           f <- ggplot(iccdat(), aes(x = theta1, y = prob, color = factor(item))) + 
             theme_bw(base_size = 16)
-          f <- f + geom_line(size = 1, show_guide = FALSE) +
+          f <- f + geom_line(size = 1, show.legend = FALSE) +
             #scale_linetype_discrete("Method") + 
             scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                                breaks = seq(0, 1, by = .1)) + 
@@ -528,7 +505,7 @@ shinyServer(function(input, output, session) {
     if(input$compare == FALSE & input$groups == FALSE) {
       f <- ggplot(tccdat(), aes(x = theta1, y = item_1.1)) + 
         theme_bw(base_size = 16)
-      f <- f + geom_line(size = 1, show_guide = FALSE) +
+      f <- f + geom_line(size = 1, show.legend = FALSE) +
         geom_point(size = 0) + 
         scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                            breaks = seq(0, 1, by = .1)) + 
