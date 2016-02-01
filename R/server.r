@@ -9,7 +9,7 @@ library(readxl)
 library(readr)
 library(grid)
 
-source(R/global.r)
+source('global.r')
 
 options(RCHART_WIDTH = 1200, RCHART_HEIGHT = 800, 
         useFancyQuotes = FALSE)
@@ -415,32 +415,13 @@ shinyServer(function(input, output, session) {
   
   output$tcc_comb <- renderPlot({
     if(input$compare == FALSE & input$groups == FALSE) {
-      f <- ggplot(tccdat(), aes(x = theta1, y = item_1.1)) + 
-        theme_bw(base_size = 16)
-      f <- f + geom_line(size = 1, show.legend = FALSE) +
-        geom_point(size = 0) + 
-        scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                           breaks = seq(0, 1, by = .1)) + 
-        scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-        theme(axis.title.y = element_text(vjust = 1.5), 
-              axis.title.x = element_text(vjust = -0.25)) + 
-        theme(panel.grid.major = element_line(colour = "#a7a7a7"))
+      tcc_plot(tccdat(), group = NULL, linetype = NULL)
     } else {
       if(input$compare == FALSE & input$groups == TRUE) {
         tccdat_local <- tccdat()
         tccdat_local[, input$groupvar] <- as.character(tccdat_local[, input$groupvar])
-        f <- ggplot(tccdat_local, aes(x = theta1, y = item_1.1)) + 
-          theme_bw(base_size = 16)
-        f <- f + geom_line(size = 1, aes_string(color = input$groupvar, 
-                                                group = input$groupvar)) +
-          geom_point(size = 0, aes_string(color = input$groupvar)) +
-          scale_color_discrete() + 
-          scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                             breaks = seq(0, 1, by = .1)) + 
-          scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-          theme(axis.title.y = element_text(vjust = 1.5), 
-                axis.title.x = element_text(vjust = -0.25)) +
-          theme(panel.grid.major = element_line(colour = "#a7a7a7"))
+        
+        tcc_plot(tccdat_local, group = input$groupvar, linetype = NULL)
       } else {
         if(input$compare == TRUE & input$groups == FALSE) {
           f <- ggplot(tccdat(), aes(x = theta1, y = item_1.1, linetype = factor(form))) + 
@@ -470,7 +451,7 @@ shinyServer(function(input, output, session) {
         }
       } 
     }
-    f
+    #f
   })
   
   output$click_tcc_comb_info <- renderDataTable({
@@ -600,7 +581,7 @@ shinyServer(function(input, output, session) {
         }
       }
     }
-    f
+    #f
   })
   
 })
