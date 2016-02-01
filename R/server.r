@@ -61,6 +61,15 @@ icc_plot <- function(data) {
         theme(panel.grid.major = element_line(colour = "#a7a7a7"))
 }
 
+tif_plot <- function(data) {
+    ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16) +
+        geom_line(aes(group = id), color = "gray15", linetype = 2) + 
+        scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
+        scale_y_continuous("Information")+ 
+        geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
+                  size = 1, linetype = 1, color = "black")
+}
+
 
 options(RCHART_WIDTH = 1200, RCHART_HEIGHT = 800, 
         useFancyQuotes = FALSE)
@@ -634,37 +643,18 @@ shinyServer(function(input, output, session) {
     }
     
     if(input$compare == FALSE & input$groups == FALSE) {
-      f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
-      f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
-        scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
-        scale_y_continuous("Information")+ 
-        geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
-                  size = 1, linetype = 1, color = "black")
+      tif_plot(item.cinf)
     } else {
       if(input$compare == FALSE & input$groups == TRUE) {
-        f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
-        f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
-          scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
-          scale_y_continuous("Information")+ 
-          geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
-                    size = 1, linetype = 1, color = "black") + 
+        tif_plot(item.cinf) + 
           facet_grid(reformulate(input$groupvar, "."))
       } else {
         if(input$compare == TRUE & input$groups == FALSE) {
-          f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
-          f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
-            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
-            scale_y_continuous("Information")+ 
-            geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), size = 1, linetype = 1, color = "black") + 
+          tif_plot(item.cinf) + 
             facet_grid(form ~ .)
         } else {
           if(input$compare == TRUE & input$groups == TRUE) {
-            f <- ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16)
-            f <- f + geom_line(aes(group = id), color = "gray15", linetype = 2) + 
-              scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
-              scale_y_continuous("Information")+ 
-              geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
-                        size = 1, linetype = 1, color = "black") + 
+            tif_plot(item.cinf) + 
               facet_grid(reformulate(input$groupvar, "form"))
           }
         }
