@@ -50,7 +50,7 @@ icc_plot <- function(data) {
         theme(panel.grid.major = element_line(colour = "#a7a7a7"))
 }
 
-tcc_plot <- function(data, group = NULL, linetype = NULL) {
+tcc_plot <- function(data) {
    ggplot(data, aes(x = theta1, y = item_1.1)) + 
         theme_bw(base_size = 16) + 
         geom_line(size = 1, show.legend = FALSE) +
@@ -64,8 +64,22 @@ tcc_plot <- function(data, group = NULL, linetype = NULL) {
         theme(panel.grid.major = element_line(colour = "#a7a7a7"))
 }
 
+tcc_plot_groups <- function(data, group = NULL, linetype = NULL) {
+  ggplot(data, aes(x = theta1, y = item_1.1)) + 
+    theme_bw(base_size = 16) + 
+    geom_line(size = 1, aes_string(color = group, linetype = linetype)) +
+    geom_point(size = 0, aes_string(color = group, linetype = linetype)) + 
+    scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
+                       breaks = seq(0, 1, by = .1)) + 
+    scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
+    scale_color_discrete() + 
+    theme(axis.title.y = element_text(vjust = 1.5), 
+          axis.title.x = element_text(vjust = -0.25)) + 
+    theme(panel.grid.major = element_line(colour = "#a7a7a7"))
+}
+
 tif_plot <- function(data) {
-    ggplot(item.cinf, aes(x = ability, y = information)) + theme_bw(base_size = 16) +
+    ggplot(data, aes(x = ability, y = information)) + theme_bw(base_size = 16) +
         geom_line(aes(group = id), color = "gray15", linetype = 2) + 
         scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
         scale_y_continuous("Information")+ 

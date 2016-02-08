@@ -38,6 +38,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$variables <- renderUI({
+    req(params)
     vars_id <- names(params())
     selectInput("idvar", "ID Variable", choices = vars_id)
   })
@@ -49,6 +50,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$items <- renderUI({
+    req(input$idvar)
     it <- unique(params()[, input$idvar])
     selectizeInput('selectitems', 'Select Items Form 1', 
                    choices = it,
@@ -415,39 +417,19 @@ shinyServer(function(input, output, session) {
   
   output$tcc_comb <- renderPlot({
     if(input$compare == FALSE & input$groups == FALSE) {
-      tcc_plot(tccdat(), group = NULL, linetype = NULL)
+      tcc_plot(tccdat(), linetype = NULL)
     } else {
       if(input$compare == FALSE & input$groups == TRUE) {
         tccdat_local <- tccdat()
         tccdat_local[, input$groupvar] <- as.character(tccdat_local[, input$groupvar])
         
-        tcc_plot(tccdat_local, group = input$groupvar, linetype = NULL)
+        tcc_plot_groups(tccdat_local, group = input$groupvar)
       } else {
         if(input$compare == TRUE & input$groups == FALSE) {
-          f <- ggplot(tccdat(), aes(x = theta1, y = item_1.1, linetype = factor(form))) + 
-            theme_bw(base_size = 16)
-          f <- f + geom_line(size = 1) + 
-            geom_point(size = 0) + 
-            scale_linetype_discrete("Form") +
-            scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                               breaks = seq(0, 1, by = .1)) + 
-            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-            theme(axis.title.y = element_text(vjust = 1.5), 
-                  axis.title.x = element_text(vjust = -0.25)) + 
-            theme(panel.grid.major = element_line(colour = "#a7a7a7"))
+          tcc_plot(tccdat()) + 
+            geom_line(data = tccdat(), size = 1, linetype = factor(form))
         } else {
-          f <- ggplot(tccdat(), aes(x = theta1, y = item_1.1, linetype = factor(form))) + 
-            theme_bw(base_size = 16)
-          f <- f + geom_line(size = 1, aes_string(color = input$groupvar)) +
-            geom_point(size = 0, aes_string(color = input$groupvar)) +
-            scale_color_discrete("Item") + 
-            scale_linetype_discrete("Form") +
-            scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
-                               breaks = seq(0, 1, by = .1)) + 
-            scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1))+ 
-            theme(axis.title.y = element_text(vjust = 1.5), 
-                  axis.title.x = element_text(vjust = -0.25)) + 
-            theme(panel.grid.major = element_line(colour = "#a7a7a7"))
+          tcc_plot_groups(tccdat(), group = input$groupvar, linetype = factor(form))
         }
       } 
     }
@@ -460,10 +442,16 @@ shinyServer(function(input, output, session) {
                       addDist = TRUE)
     grp <- paste(sQuote(unique(res[, input$groupvar])), collapse = ",")
     
-    tmp <- avgpars() %>%
+    if(input$groups){
+      tmp <- avgpars() %>%
         filter_(.dots = paste0(input$groupvar, '%in% c(', 
                                grp, ")"))
-    datatable(tmp)
+      datatable(tmp)
+    } else {
+      tmp <- avgpars()
+      datatable(tmp)
+    }
+    
   })
   
   output$tif <- renderPlot({
