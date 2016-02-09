@@ -417,7 +417,7 @@ shinyServer(function(input, output, session) {
   
   output$tcc_comb <- renderPlot({
     if(input$compare == FALSE & input$groups == FALSE) {
-      tcc_plot(tccdat(), linetype = NULL)
+      tcc_plot(tccdat())
     } else {
       if(input$compare == FALSE & input$groups == TRUE) {
         tccdat_local <- tccdat()
@@ -427,9 +427,9 @@ shinyServer(function(input, output, session) {
       } else {
         if(input$compare == TRUE & input$groups == FALSE) {
           tcc_plot(tccdat()) + 
-            geom_line(data = tccdat(), size = 1, linetype = factor(form))
+            geom_line(data = tccdat(), size = 1, linetype = 'form')
         } else {
-          tcc_plot_groups(tccdat(), group = input$groupvar, linetype = factor(form))
+          tcc_plot_groups(tccdat(), group = input$groupvar, linetype = 'form')
         }
       } 
     }
@@ -560,7 +560,7 @@ shinyServer(function(input, output, session) {
       } else {
         if(input$compare == TRUE & input$groups == FALSE) {
           tif_plot(item.cinf) + 
-            facet_grid(form ~ .)
+            facet_grid(reformulate('.', 'form'))
         } else {
           if(input$compare == TRUE & input$groups == TRUE) {
             tif_plot(item.cinf) + 
