@@ -454,7 +454,7 @@ shinyServer(function(input, output, session) {
     
   })
   
-  output$tif <- renderPlot({
+  tif_data <- reactive({
     if(input$groups == FALSE) {
       if(length(input$param_vals) == 1) {
         paramsA_sort <- paramsA() %>%
@@ -550,20 +550,23 @@ shinyServer(function(input, output, session) {
         item.cinf <- rbind(item.cinf, item.cinf_2)
       }
     }
-    
+    return(item.cinf)
+  })
+  
+  output$tif <- renderPlot({
     if(input$compare == FALSE & input$groups == FALSE) {
-      tif_plot(item.cinf)
+      tif_plot(tif_data())
     } else {
       if(input$compare == FALSE & input$groups == TRUE) {
-        tif_plot(item.cinf) + 
+        tif_plot(tif_data()) + 
           facet_grid(reformulate(input$groupvar, "."))
       } else {
         if(input$compare == TRUE & input$groups == FALSE) {
-          tif_plot(item.cinf) + 
+          tif_plot(tif_data()) + 
             facet_grid(reformulate('.', 'form'))
         } else {
           if(input$compare == TRUE & input$groups == TRUE) {
-            tif_plot(item.cinf) + 
+            tif_plot(tif_data()) + 
               facet_grid(reformulate(input$groupvar, "form"))
           }
         }

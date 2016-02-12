@@ -67,8 +67,8 @@ tcc_plot <- function(data) {
 tcc_plot_groups <- function(data, group = NULL, linetype = NULL) {
   ggplot(data, aes(x = theta1, y = item_1.1)) + 
     theme_bw(base_size = 16) + 
+    geom_point(size = 0, aes_string(color = group, shape = linetype)) + 
     geom_line(size = 1, aes_string(color = group, linetype = linetype)) +
-    geom_point(size = 0, aes_string(color = group, linetype = linetype)) + 
     scale_y_continuous("Probability", limits = c(0, 1), expand = c(0, 0), 
                        breaks = seq(0, 1, by = .1)) + 
     scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
@@ -82,7 +82,7 @@ tif_plot <- function(data) {
     ggplot(data, aes(x = ability, y = information)) + theme_bw(base_size = 16) +
         geom_line(aes(group = id), color = "gray15", linetype = 2) + 
         scale_x_continuous("Ability", limits = c(-5, 5), breaks = seq(-5, 5, by = 1)) + 
-        scale_y_continuous("Information")+ 
-        geom_line(data = subset(item.cinf, group == 1), aes(x = ability, y = information), 
+        scale_y_continuous("Information") + 
+        geom_line(data = subset(data, group == 1), aes(x = ability, y = information), 
                   size = 1, linetype = 1, color = "black")
 }
