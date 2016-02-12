@@ -1,8 +1,10 @@
 library(shiny)
 library(DT)
 library(shinythemes)
+library(shinydashboard)
 
-shinyUI(navbarPage(theme = shinytheme("journal"),
+shinyUI(
+  navbarPage(theme = shinytheme("journal"),
   title = 'Form Building',
   tabPanel('Input File', 
            fluidPage(
