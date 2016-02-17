@@ -56,35 +56,36 @@ body <- dashboardBody(
                )
              ),
              box(
-               h2('Select ID Variable'),
+               h3('Select ID Variable'),
                hr(),
                uiOutput('variables'),
                h5('Select the variable to identify items. This will be used
                   to select items included in the analysis'),
                hr()
-             )
              ),
-           fluidRow(
              box(
-               h2('Select IRT Item Parameter Variables'),
+               h3('Select IRT Item Parameter Variables'),
                hr(),
                uiOutput('param_v'),
                h5('Select the variables that correspond to the discrimination (a),
-                  difficulty (b), and pseudo-guessing (c) parameters. These must
-                  be specified in the order of a, then b, then c. Note: Only the 
+                  difficulty (b), and pseudo-guessing (c) parameters.'),
+               h6('These must be specified in the order of a, then b, then c. Note: Only the 
                   b parameter is needed for the equivalent 1PL model.'),
                hr()
-             ),
+               ),
              box(
-               h2('Select Items Form 1'),
+               h3('Select Items Form 1'),
                hr(),
                uiOutput('items'),
                actionButton('run', 'Update'),
-               h5('Use the text box above to select items to include in the analysis, each item must be separated by a comma.'),
-               h5('Note: Click update button to run analysis (even if no items are selected in box above).'),
-               h5('\n If no items identified in the text box, analysis is run on all items.')
+               h5('Use the text box above to select items to include in the analysis.'),
+               h6('Note: Click update button to run analysis (even if no items are selected in box above).
+                  If no items identified in the text box, analysis is run on all items.')
              )
-           ),
+             ),
+           # fluidRow(
+           #   
+           # ),
            fluidRow(
              box(
                width = 4,
@@ -92,7 +93,7 @@ body <- dashboardBody(
                hr(),
                conditionalPanel(
                  condition = "input.compare == true",
-                 h2('Build Form 2'),
+                 h3('Build Form 2'),
                  hr(),
                  uiOutput('items_form2'),
                  actionButton('run2', 'Update Form 2'),
